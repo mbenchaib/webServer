@@ -6,17 +6,20 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/04/28 17:23:12 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/04/29 17:00:10 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webServer.hpp"
+#include <fstream>
 
 webServer::webServer(std::string config_file)
 {
-    //Handle config file
-    //Check if exist if valid...
-    //Should be in specific format i think
+    std::ifstream file(config_file.c_str());
+    if (!file.is_open())
+    {
+        throw 
+    }
 }
 
 webServer::run()
