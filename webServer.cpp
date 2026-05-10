@@ -3,15 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   webServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: roubelka <roubelka@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/04/29 17:54:37 by roubelka         ###   ########.fr       */
+/*   Updated: 2026/05/10 17:03:26 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webServer.hpp"
 #include <fstream>
+#include "Exceptions.hpp"
+#include "ConfigParser.hpp"
 
 webServer::webServer(std::string config_file)
 {
@@ -21,12 +23,14 @@ webServer::webServer(std::string config_file)
         throw 
     }
 }
-///rachid
+
 webServer::run()
 {
     //setupSocket()
     while (true)
     {
+        poll
+        
         //acceptClient()
         //readRequest(int fd)
         //HttpParser here just check the syntax and structure of request message
