@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 12:08:04 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/05/09 21:40:03 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/05/10 16:56:07 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -286,20 +286,4 @@ Config ConfigParser::parseFile(const std::string& filename)
     validate(conf);
 
     return (conf);
-}
-
-int main(int argc, char *argv[])
-{
-    ConfigParser c;
-    Config cf;
-
-    try 
-    {
-        cf = c.parseFile(argv[1]);
-        std::cout << "Good" << std::endl;
-    }
-    catch(std::exception& e)
-    {
-        std::cout << e.what() << std::endl;
-    }
 }
