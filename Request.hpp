@@ -27,7 +27,7 @@ class Request
 
         bool                                valid;  //  IN CASE OF UNSUPORTED METHOD OR UNSUPORTED HTTP VERSION OR BODY_LEN HAVE CHARS IN IT
         bool                                CGI;    //IF IT TRUE IT MY JOB IF IT NOT IT UR JOB
-        std::map<std::string, std::string>  headers;
+        std::map<std::string, std::string>  headers; // dakchi li chayet men headers jidto hnaya
         Request(void): valid(true), body_len(0), CGI(false){};
         void    parse_request(const std::string& raw);
         void    check_first_line(std::stringstream& first);
