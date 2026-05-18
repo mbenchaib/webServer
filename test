@@ -1,0 +1,174 @@
+// #include <vector>
+// #include <poll.h>
+// #include <fcntl.h>
+// #include <stdio.h>
+// #include <iostream>
+// #include <stdlib.h>
+// #include <unistd.h>
+// #include <sys/socket.h>
+// #include <netinet/in.h>
+// #include <sys/select.h>
+
+// void    check_status(int status, int throw_or_not, std::string msg)
+// {
+//     if (status == -1)
+//     {
+//         if (throw_or_not)
+//             throw std::runtime_error(msg.c_str());
+//         perror(msg.c_str());
+//         exit(1);
+//     }
+// }
+
+// class client
+// {
+//     public:
+//         typedef enum status
+//         {
+//             READ,
+//             WRITE,
+//             CLOSE
+//         }   status;
+//         int                 fd;
+//         int                 state;
+//         long                bytes_send_to_client;
+//         struct sockaddr_in  add;
+//         std::string         request;
+//         std::string         response;
+//         client(int _fd) : fd(_fd), state(READ), bytes_send_to_client(0)
+//         {
+//             std::cout << "client have created with fd " << fd << '\n';
+//         }
+//         void    read_request(void)
+//         {
+//             if (state != READ)
+//                 return ;
+//             char buffer[1024];
+//             int bytes = recv(fd, buffer, sizeof(buffer), 0);
+//             check_status(bytes, 1, "recv");
+//             if (!bytes)
+//             {
+//                 state = CLOSE;
+//                 return ;
+//             }
+//             else
+//             {
+//                 request.append(buffer, bytes);
+//                 if (request.find("\r\n\r\n") != std::string::npos)
+//                 {
+//                     response = "HTTP/1.0 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+//                     state = WRITE;
+//                 }
+//             }
+//         }
+//         void    send_response(void)
+//         {
+//             if (state != WRITE)
+//                 return ;
+//             int bytes_to_send = response.size() - bytes_send_to_client;
+//             if (bytes_to_send > 1000)
+//                 bytes_to_send = 1000;
+//             int bytes = send(fd, response.c_str() + bytes_send_to_client, bytes_to_send, 0);
+//             check_status(bytes, 1, "send");
+//             bytes_send_to_client += bytes;
+//             if (bytes_send_to_client >= response.size())
+//                 state = CLOSE;
+//         }
+//         ~client(void)
+//         {
+//             std::cout << "client " << fd << " exit with status ";
+//             switch (state)
+//             {
+//             case READ:
+//                 std::cout << "READ\n";
+//                 break;
+//             case WRITE:
+//                 std::cout << "READ\n";
+//                 break;
+//             case CLOSE:
+//                 std::cout << "READ\n";
+//                 break;
+//             default:
+//                 break;
+//             }
+//             close(fd);
+//         }
+// };
+
+// class server
+// {
+//     private:
+//         int                         server_fd;
+//         std::vector<client>         clients;
+//         struct sockaddr_in          add;
+//     public:
+//         server()
+//         {
+//             clients.reserve(1024);
+//             server_fd = socket(AF_INET, SOCK_STREAM, 0);
+//             check_status(server_fd, 0, "socket");
+//             int opt = 1;
+//             check_status(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)), 1, "setsockopt");
+//             add.sin_family = AF_INET;
+//             add.sin_port = htons(8080);
+//             add.sin_addr.s_addr = 0;
+//             check_status(bind(server_fd, (struct sockaddr *)(&add), sizeof(add)), 1, "bind");
+//             check_status(listen(server_fd, 10), 1, "listen");
+//         }
+//         void    start_server(void)
+//         {
+//             while(1)
+//             {
+//                 fd_set read_fd, write_fd, error_fd;
+//                 FD_ZERO(&read_fd);
+//                 FD_ZERO(&write_fd);
+//                 FD_ZERO(&error_fd);
+//                 FD_SET(server_fd, &read_fd);
+//                 int max_fd = server_fd;
+//                 for (size_t i = 0; i < clients.size(); i++)
+//                 {
+//                     if (clients[i].state == client::READ)
+//                         FD_SET(clients[i].fd, &read_fd);
+//                     if (clients[i].state == client::WRITE)
+//                         FD_SET(clients[i].fd, &write_fd);
+//                     FD_SET(clients[i].fd, &error_fd);
+//                     if (clients[i].fd > max_fd)
+//                         max_fd = clients[i].fd;
+//                 }
+//                 check_status(select(max_fd + 1, &read_fd, &write_fd, &error_fd, NULL), 1, "select");
+//                 if (FD_ISSET(server_fd, &read_fd))
+//                 {
+//                     int client_fd = accept(server_fd, NULL, NULL);
+//                     check_status(client_fd, 1, "accept");
+//                     clients.push_back(client_fd);
+//                     continue ;
+//                 }
+//                 for (size_t i = 0; i < clients.size(); i++)
+//                 {
+//                     if (FD_ISSET(clients[i].fd, &error_fd) || clients[i].state == client::CLOSE)
+//                     {
+//                         close(clients[i].fd);
+//                         clients.erase(clients.begin() + i);
+//                         i--;
+//                         continue;
+//                     }
+//                     if (FD_ISSET(clients[i].fd, &read_fd))
+//                         clients[i].read_request();
+//                     else if (FD_ISSET(clients[i].fd, &write_fd))
+//                         clients[i].send_response();
+
+//                     if (clients[i].state == client::CLOSE)
+//                     {
+//                         close(clients[i].fd);
+//                         clients.erase(clients.begin() + i);
+//                         i--;
+//                     }
+//                 }
+                
+//             }
+//         }
+//         ~server()
+//         {
+//             close(server_fd);
+//         }
+// };
