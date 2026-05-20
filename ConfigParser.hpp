@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 20:40:02 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/05/10 16:51:38 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/05/16 18:56:11 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ struct Location
     std::string path;
     std::vector<Directive> directives;
 
-    Directive* getDirectives(const std::string& name)
+    Directive* getDirective(const std::string& name)
     {
         for (size_t i = 0; i < directives.size(); i++)
         {
@@ -50,7 +50,7 @@ struct Server
         return (locations);
     }
 
-    Directive* getDirectives(const std::string& name)
+    Directive* getDirective(const std::string& name)
     {
         for (size_t i = 0; i < directives.size(); i++)
         {

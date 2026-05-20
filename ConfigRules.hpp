@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 22:06:41 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/05/09 21:23:57 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/05/16 17:55:42 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,9 +34,10 @@ struct DirectiveRule
     int         maxValues;
     ValueType   type;
     bool        allowDuplicate;
+    bool        required;
 
-    DirectiveRule() : minValues(0), maxValues(0), type(TYPE_UNKNOWN), allowDuplicate(false) {}
-    DirectiveRule(int x, int y, ValueType ty, bool ad) : minValues(x), maxValues(y), type(ty), allowDuplicate(ad) {}
+    DirectiveRule() : minValues(0), maxValues(0), type(TYPE_UNKNOWN), allowDuplicate(false), required(false) {}
+    DirectiveRule(int x, int y, ValueType ty, bool ad, bool re) : minValues(x), maxValues(y), type(ty), allowDuplicate(ad), required(re) {}
 };
 
 void initRules(std::map<std::string, DirectiveRule>& serverRules, std::map<std::string, DirectiveRule>& locationRules);

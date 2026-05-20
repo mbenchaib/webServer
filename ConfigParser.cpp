@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 12:08:04 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/05/10 16:56:07 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/05/20 18:11:13 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <cctype>
 #include <cstddef>
 #include <cstring>
+#include <exception>
 #include <vector>
 #include <string>
 #include <map>
@@ -23,7 +24,7 @@
 #include <iostream>
 
                             // =======================
-                            //         Helper
+                            //         Helpers
                             // =======================
                             
 static bool hasDuplicate(std::vector<Location>::const_iterator iter, std::vector<Location>::const_iterator& end)
@@ -187,7 +188,30 @@ Config ConfigParser::parse(const std::vector<std::string>& tokens)
                                         Validation Helpers
                             ========================================= */
 
-static void validateDirectives(const std::vector<Directive>& directives, std::map<std::string, DirectiveRule>& DirRules)
+static void checkRequiredDirectives(const std::vector<Directive>& directives, const std::map<std::string, DirectiveRule>& DirRules)
+{
+    std::map<std::string, DirectiveRule>::const_iterator iter_map = DirRules.begin();
+    std::map<std::string, DirectiveRule>::const_iterator end_map = DirRules.end();
+
+    while (iter_map != end_map)
+    {
+        if (!iter_map->second.required)
+        {
+            iter_map++;
+            continue ;
+        }
+        
+        for (size_t i = 0; i < directives.size(); i++)
+        {
+            if (directives[i].name == iter_map->first)
+                return ;
+        }
+        iter_map++;
+    }
+    throw ConfigValidationError("Error: missing required directive");
+}
+
+static void validateDirectives(const std::vector<Directive>& directives, const std::map<std::string, DirectiveRule>& DirRules)
 {
     if (directives.empty())
         return ;
@@ -211,9 +235,10 @@ static void validateDirectives(const std::vector<Directive>& directives, std::ma
             throw ConfigValidationError("Error: Invalid directive value");
         iter++;     
     }
+    checkRequiredDirectives(directives, DirRules);
 }
 
-static void validateLocations(const std::vector<Location>& locations, std::map<std::string, DirectiveRule>& locationRules)
+static void validateLocations(const std::vector<Location>& locations, const std::map<std::string, DirectiveRule>& locationRules)
 {
     if (locations.empty())
         return ;
