@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/06 15:21:41 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/06 23:02:04 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -170,22 +170,24 @@ void WebServer::run()
             throw std::runtime_error(std::string("poll failed in event loop: ") + strerror(errno));
         }
 
-        for (int i = 0; i < n; i++)
+        for (size_t i = 0; i < pfds.size(); i++)
         {
+            if (pfds[i].revents == 0)
+                continue;
+            
             if (pfds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
             {
                 close(pfds[i].fd);
                 pfds.erase(pfds.begin() + i);
+                i--;
                 continue;
             }
             
-            if (!(pfds[i].revents & POLLIN))
-                continue;
-            
-            std::vector<int>::iterator it = std::find(server_sd.begin(), server_sd.end(), pfds[i].fd);
-            if (it != server_sd.end())
+            bool isListening = std::find(server_sd.begin(), server_sd.end(), pfds[i].fd) != server_sd.end();
+
+            if (isListening && (pfds[i].revents & POLLIN))
                 acceptClient(pfds[i].fd);
-            else
+            else if (!isListening)
                 //HandleClient()
         }
     }
