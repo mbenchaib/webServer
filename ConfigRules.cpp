@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 22:06:50 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/05/16 18:34:14 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/06 16:21:53 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,7 +181,7 @@ static bool isValidErrorPage(const std::vector<std::string> values)
 
 static bool isValidMethod(const std::vector<std::string> values)
 {
-    for (size_t i = 0; values.size(); i++)
+    for (size_t i = 0; i < values.size(); i++)
     {
         if (values[i] != "GET" && values[i] != "POST" && values[i] != "DELETE")
             return (false);
@@ -290,6 +290,7 @@ void initRules(std::map<std::string, DirectiveRule>& serverRules, std::map<std::
     
     locationRules["methods"]     =   DirectiveRule(1, 3, TYPE_METHOD, false, false);
     locationRules["root"]        =   DirectiveRule(1, 1, TYPE_PATH, false, false);
+    locationRules["index"]         =   DirectiveRule(1, UNSPECIFIED_MAX_VALUES, TYPE_FILENAME, false, false);
     locationRules["autoindex"]   =   DirectiveRule(1, 1, TYPE_ON_OFF, false, false);
     locationRules["max_body"]    =   DirectiveRule(1, 1, TYPE_SIZE, false, false);
     locationRules["cgi"]         =   DirectiveRule(2, 2, TYPE_CGI, true, false);

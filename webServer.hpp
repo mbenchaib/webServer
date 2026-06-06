@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/26 23:06:52 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/05/20 18:15:06 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/05 23:34:19 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "ConfigParser.hpp"
 #include <sys/event.h>
 #include <map>
+#include <poll.h>
 
 #define BACKLOG 128
 #define MAX_EVENTS 64
@@ -27,12 +28,12 @@ private:
     int                         kq;
     Config                      config;
     std::vector<int>            server_sd;
-    struct kevent               events[MAX_EVENTS];
+    std::vector<struct pollfd>  pfds;
     std::map<int, Client>       clients;
     
     void setupSocket();
-    void acceptClient(int, struct kevent);
-    void registerSocketEvent(struct kevent&);
+    void acceptClient(int);
+    void addListenFds();
     //void HandleClient()
     
     

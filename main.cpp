@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/26 22:12:10 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/04/27 16:40:41 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/05 16:52:59 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,5 +23,5 @@ int main(int argc, char *argv[])
     
     WebServer ws(argv[1]);
     
-    ws.run();
+    //ws.run();
 }

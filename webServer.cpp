@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/05/20 18:31:57 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/06 15:21:41 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 #include <cstring>
 #include <stdexcept>
 #include <string.h>
+#include <string>
+#include <sys/signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -51,9 +53,6 @@ WebServer::WebServer(std::string config_file)
     ConfigParser cp;
     
     config = cp.parseFile(config_file);
-
-    if ((kq = kqueue()) == -1)
-        throw SocketSetupError(strerror(errno));
 }
 
 WebServer::~WebServer()
@@ -69,13 +68,23 @@ void WebServer::setupSocket()
     int                         sd;
     struct addrinfo             hints, *res;
     std::vector<std::string>    listenAddresses;
+    std::string                 ip;
+    std::string                 port;
     
     for (size_t i = 0; i < config.servers.size(); i++)
     {
         std::string ip_port = config.servers[i].getDirective("listen")->getValues()[0];
         size_t pos = ip_port.find(':');
-        std::string ip = ip_port.substr(0, pos);
-        std::string port = ip_port.substr(pos + 1);
+        if (pos == std::string::npos)
+        {
+            ip = "0.0.0.0";
+            port = ip_port;
+        }
+        else
+        {
+            ip = ip_port.substr(0, pos);
+            port = ip_port.substr(pos + 1);
+        }
         listenAddresses.push_back(ip_port);
 
         if (isListenAddressUsed(ip_port, listenAddresses))
@@ -101,30 +110,23 @@ void WebServer::setupSocket()
     }
 }
 
-// ===== Register listening sockets with kqueue for read events =====
+// ===== Add listening sockets to the poll file descriptor list =====
 
-void WebServer::registerSocketEvent(struct kevent& ev)
+void WebServer::addListenFds()
 {
     for (size_t i = 0; i < server_sd.size(); i++)
     {
-        EV_SET(&ev, server_sd[i], EVFILT_READ, EV_ADD, 0, 0, NULL);
-        if (kevent(kq, &ev, 1, NULL, 0, NULL) == -1)
-        {
-            std::cerr << "Failed to register socket "
-                      << server_sd[i]
-                      << ": "
-                      << strerror(errno)
-                      << "\n";
-            close(server_sd[i]);
-            server_sd.erase(server_sd.begin() + i);
-            i--;
-        }
+        struct pollfd   pfd;
+        
+        pfd.fd = server_sd[i];
+        pfd.events = POLLIN;
+        pfds.push_back(pfd);
     }
 }
 
-// ===== Accept a new client and register it for event monitoring =====
+// ===== Accept a new client and add it to the poll list =====
 
-void acceptClient(int serv_sd, struct kevent& ev)
+void WebServer::acceptClient(int serv_sd)
 {
     int fd_client;
     if ((fd_client = accept(serv_sd, NULL, NULL)) == -1)
@@ -137,61 +139,52 @@ void acceptClient(int serv_sd, struct kevent& ev)
         return ;
     }
     
-    EV_SET(&ev, fd_client, EVFILT_READ, EV_ADD, 0, 0, NULL);
-    if (kevent(fd_client, &ev, 1, NULL, 0, NULL) == -1)
-    {
-        std::cerr << "Failed to register socket "
-                    << fd_client
-                    << ": "
-                    << strerror(errno)
-                    << "\n";
-        close(fd_client);
-        return ;
-    }
-    //clients[fd_client] = Client();    
+    struct pollfd   pfd;
+    
+    pfd.fd = fd_client;
+    pfd.events = POLLIN;
+    pfds.push_back(pfd);
+    
+    //clients[fd_client] = Client();
 }
 
-// ===== Initialize the server and process socket events in the main kqueue loop =====
+// ===== Initialize server and process socket events using poll() =====
 
 void WebServer::run()
 {
-    struct kevent ev;
-
     setupSocket();
     
-    registerSocketEvent(ev);
-
     if (server_sd.empty())
         throw NoListenSocketException("Server startup failed: no listening sockets available");
     
+    addListenFds();
+    
     while (true)
     {
-        int n = kevent(kq, NULL, 0, events, MAX_EVENTS, NULL);
+        int n = poll(pfds.data(), pfds.size(), -1);
         if (n == -1)
         {
             if (errno == EINTR)
-                continue ;
+                continue;
 
-            throw std::runtime_error(std::string("kevent failed in event loop: ") + strerror(errno));
+            throw std::runtime_error(std::string("poll failed in event loop: ") + strerror(errno));
         }
 
         for (int i = 0; i < n; i++)
         {
-            if (events[i].flags & EV_ERROR)
+            if (pfds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
             {
-                std::cerr << "kevent event error on fd "
-                          << events[i].ident
-                          << ": "
-                          << strerror(static_cast<int>(events[i].data))
-                          << "\n";
-                close(events[i].ident);
-                clients.erase(events[i].ident);
+                close(pfds[i].fd);
+                pfds.erase(pfds.begin() + i);
                 continue;
             }
             
-            std::vector<int>::iterator it = std::find(server_sd.begin(), server_sd.end(), events[i].ident);
+            if (!(pfds[i].revents & POLLIN))
+                continue;
+            
+            std::vector<int>::iterator it = std::find(server_sd.begin(), server_sd.end(), pfds[i].fd);
             if (it != server_sd.end())
-                acceptClient(events[i].ident, ev);
+                acceptClient(pfds[i].fd);
             else
                 //HandleClient()
         }
