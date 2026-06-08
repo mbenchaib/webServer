@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/06 23:02:04 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/08 16:42:21 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,13 +18,15 @@
 #include <stdexcept>
 #include <string.h>
 #include <string>
+#include <sys/fcntl.h>
 #include <sys/signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <sys/event.h>
+#include <fcntl.h>
 #include <iostream>
+
 
                             // =======================
                             //         Helpers
@@ -100,6 +102,13 @@ void WebServer::setupSocket()
         if ((sd = socket(res->ai_family, res->ai_socktype, 0)) == -1)
             throw SocketSetupError(strerror(errno));
 
+        int yes = 1;
+        if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
+            throw SocketSetupError(strerror(errno));
+
+        if (fcntl(sd, F_SETFL, O_NONBLOCK) == -1)
+            throw SocketSetupError(strerror(errno));
+
         server_sd.push_back(sd);
 
         if (bind(sd, res->ai_addr, res->ai_addrlen) == -1)
@@ -137,6 +146,12 @@ void WebServer::acceptClient(int serv_sd)
                   << strerror(errno)
                   << "\n";
         return ;
+    }
+    
+    if (fcntl(fd_client, F_SETFL, O_NONBLOCK) == -1)
+    {
+        close(fd_client);
+        return;
     }
     
     struct pollfd   pfd;
