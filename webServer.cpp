@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/09 16:48:57 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/09 18:28:40 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,7 +186,7 @@ void WebServer::run()
         }
 
         for (size_t i = 0; i < pfds.size(); i++)
-        {
+        {            
             if (pfds[i].revents == 0)
                 continue;
             
@@ -200,6 +200,14 @@ void WebServer::run()
                 pfds.erase(pfds.begin() + i);
                 if (!isListening)
                     clients.erase(fd);
+                else
+                {
+                    std::vector<int>::iterator it = std::find(server_sd.begin(), server_sd.end(), fd); 
+                    server_sd.erase(it);
+
+                    if (server_sd.empty())
+                        throw NoListenSocketException("All listening sockets have failed; server shutting down");
+                }
                 i--;
                 continue;
             }
