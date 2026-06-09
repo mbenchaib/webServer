@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/08 16:42:21 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/09 16:48:57 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,16 +190,20 @@ void WebServer::run()
             if (pfds[i].revents == 0)
                 continue;
             
+            bool isListening = std::find(server_sd.begin(), server_sd.end(), pfds[i].fd) != server_sd.end();
+            
             if (pfds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
             {
-                close(pfds[i].fd);
+                int fd = pfds[i].fd;
+                
+                close(fd);
                 pfds.erase(pfds.begin() + i);
+                if (!isListening)
+                    clients.erase(fd);
                 i--;
                 continue;
             }
             
-            bool isListening = std::find(server_sd.begin(), server_sd.end(), pfds[i].fd) != server_sd.end();
-
             if (isListening && (pfds[i].revents & POLLIN))
                 acceptClient(pfds[i].fd);
             else if (!isListening)

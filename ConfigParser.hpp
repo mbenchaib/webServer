@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 20:40:02 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/08 23:22:04 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/09 14:32:53 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,6 +108,25 @@ struct Server
         if ((dir = getDirective("root")))
             return (dir->getValues()[0]);
         return ("");
+    }
+    
+    size_t getMaxBody()
+    {
+        Directive* dir = getDirective("max_body");
+        if (!dir)
+            return (0);
+        
+        std::string max_body = dir->getValues()[0];
+        size_t size = atoi(max_body.c_str());
+        
+        if (max_body[max_body.size() - 1] == 'K')
+            return (size * 1024);
+        else if (max_body[max_body.size() - 1] == 'M')
+            return (size * 1024 * 1024);
+        else if (max_body[max_body.size() - 1] == 'G')
+            return (size * 1024 * 1024 * 1024);
+        else
+            return (size);
     }
     
     Location* findLocation(const std::string& uri)
