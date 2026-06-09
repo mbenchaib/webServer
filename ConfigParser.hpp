@@ -6,10 +6,11 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 20:40:02 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/06 17:13:16 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/08 23:22:04 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <algorithm>
 #include <cstddef>
 #include <fstream>
 #include <vector>
@@ -19,7 +20,7 @@ struct Directive
     std::string name;
     std::vector<std::string> values;
 
-    std::vector<std::string> getValues()
+    const std::vector<std::string>& getValues()
     {
         return (values);
     }
@@ -55,6 +56,14 @@ struct Location
         }
         return ("");
     }
+
+    std::string getRoot()
+    {
+        Directive* dir;
+        if ((dir = getDirective("root")))
+            return (dir->getValues()[0]);
+        return ("");
+    }
 };
 
 struct Server
@@ -62,7 +71,7 @@ struct Server
     std::vector<Directive> directives;
     std::vector<Location> locations;
 
-    std::vector<Location> getLocations()
+    const std::vector<Location>& getLocations()
     {
         return (locations);
     }
@@ -92,11 +101,51 @@ struct Server
         }
         return ("");
     }
+
+    std::string getRoot()
+    {
+        Directive* dir;
+        if ((dir = getDirective("root")))
+            return (dir->getValues()[0]);
+        return ("");
+    }
+    
+    Location* findLocation(const std::string& uri)
+    {
+        std::vector<int> l;
+        
+        for (size_t i = 0; i < locations.size(); i++)
+        {
+            std::size_t pos;
+            if (!(pos = uri.find(locations[i].path)))
+                l.push_back(locations[i].path.size());
+        }
+        if (!l.size())
+        {
+            std::vector<int>::iterator it = std::max_element(l.begin(), l.end());
+            return (&locations[*it]);
+        }
+        return (NULL);
+    }
 };
 
 struct Config
 {
     std::vector<Server> servers;
+
+    Server findServerByHost(const std::string& host)
+    {
+        for (size_t i = 0; i < servers.size(); i++)
+        {
+            Directive* dir = servers[i].getDirective("host");
+            if (!dir)
+                continue;
+            
+            if (dir->getValues()[0] == host)
+                return (servers[i]);
+        }
+        return (servers[0]);
+    }
 };
 
 class ConfigParser
