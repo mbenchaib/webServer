@@ -1,0 +1,13 @@
+server {
+    listen 8080;
+
+    root /var/www;
+    
+    location /cgi-bin
+    {
+        methods GET POST;
+        root /usr/bin;
+        cgi .py /usr/bin/python3;
+    }
+
+}

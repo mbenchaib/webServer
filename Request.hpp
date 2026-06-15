@@ -1,38 +1,51 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
+
 #include <map>
+#include <string>
 #include <vector>
 #include <sstream>
-#include <fstream>
 #include <iostream>
-/*
-    hada class dyal request
-    kat3ayet nhad class hta katwsal n "\r\n\r\n"
-    ou men ba3d ana kanjbedlek method ou bodylen bihom thaded wach hat9ra body awla
-    check client dyali kifa ki9ra request men socket bach tfham
-*/
+#include <cstdlib>
+
+enum ChunkState {
+    CHUNK_SIZE,
+    CHUNK_DATA,
+    CHUNK_CRLF,
+    CHUNK_DONE,
+    CHUNK_ERROR
+};
+
 class Request
 {
     public:
-        // THIS PART FOR FIRST LINE
-        std::string                         method; // GET, DELETE, POST
-        std::string                         path;   // PATH OF THE FILE CLIENT WANT IT
-        std::string                         quere_string;// anything after ? in path
-        std::string                         version;// HTTP1.1 OR HTTP1.0
-        // THIS PART FOR IMPORTANT HEADERS
-        std::string                         host;   // host request from client
-        std::string                         body;   // CONTENT AFTER "\r\n\r\n"
-        std::string                         content_type; // type dyall content li sared client
-        unsigned long                       body_len;// TOUL DYAL BODY
+        int                                 error_code;
 
-        bool                                valid;  //  IN CASE OF UNSUPORTED METHOD OR UNSUPORTED HTTP VERSION OR BODY_LEN HAVE CHARS IN IT
-        bool                                CGI;    //IF IT TRUE IT MY JOB IF IT NOT IT UR JOB
-        std::map<std::string, std::string>  headers; // dakchi li chayet men headers jidto hnaya
-        Request(void): valid(true), body_len(0), CGI(false){};
+        std::string                         method;
+        std::string                         path;
+        std::string                         query_string;
+        std::string                         version;
+        std::string                         host;
+        std::string                         body;
+        std::string                         content_type;
+        unsigned long                       body_len;
+
+        bool                                valid;
+        bool                                is_chunked;
+        
+        ChunkState                          chunk_state;
+        size_t                              current_chunk_size;
+
+        std::map<std::string, std::string>  headers;
+
+        Request(void) : body_len(0), valid(true), is_chunked(false),
+            chunk_state(CHUNK_SIZE), current_chunk_size(0), error_code(0) {};
+        
+        void    print(void);
+        void    check_body_len(void);
         void    parse_request(const std::string& raw);
         void    check_first_line(std::stringstream& first);
-        void    print(void);
+        void    parse_chunked_body(std::string& raw_buffer);
 };
-
 
 #endif
