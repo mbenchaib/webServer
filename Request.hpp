@@ -32,7 +32,7 @@ class Request
 
         bool                                valid;
         bool                                is_chunked;
-        
+
         ChunkState                          chunk_state;
         size_t                              current_chunk_size;
 
@@ -40,7 +40,7 @@ class Request
 
         Request(void) : body_len(0), valid(true), is_chunked(false),
             chunk_state(CHUNK_SIZE), current_chunk_size(0), error_code(0) {};
-        
+
         void    print(void);
         void    check_body_len(void);
         void    parse_request(const std::string& raw);

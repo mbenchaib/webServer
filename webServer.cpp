@@ -6,7 +6,7 @@
 /*   By: sael-kha <sael-kha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/15 15:21:53 by sael-kha         ###   ########.fr       */
+/*   Updated: 2026/06/17 10:42:33 by sael-kha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -195,17 +195,15 @@ void    WebServer::HandleClient(struct pollfd& fd)
         clian.parsed_request.print();
         clian.sending_response();
     }
+    // hna mli kansali client canmsho
     if (clian.status == CLOSE)
     {
         std::cout << "server close client\n";
 
-        // Close the socket
         close(fd.fd);
 
-        // Remove from clients map
         clients.erase(fd.fd);
 
-        // Remove from poll list
         for (std::vector<pollfd>::iterator it = pfds.begin(); it != pfds.end(); ++it)
         {
             if (it->fd == fd.fd)
@@ -214,7 +212,6 @@ void    WebServer::HandleClient(struct pollfd& fd)
                 break;
             }
         }
-
         return;
     }
 }
@@ -251,6 +248,8 @@ void WebServer::run()
             
             if (pfds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
             {
+                std::cout << "client with "<<pfds[i].fd << " gone\n";
+                std::cout << strerror(errno) << '\n';
                 int fd = pfds[i].fd;
                 
                 close(fd);
@@ -266,7 +265,7 @@ void WebServer::run()
                         throw NoListenSocketException("All listening sockets have failed; server shutting down");
                 }
                 i--;
-                break ;
+                continue ;
             }
             if (isListening && (pfds[i].revents & POLLIN))
                 acceptClient(pfds[i].fd);

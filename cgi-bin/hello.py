@@ -1,0 +1,1 @@
+print("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: 24\r\n\r\n<h1>Hello my nigger</h1>")

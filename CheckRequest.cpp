@@ -5,8 +5,8 @@ std::string create_301_302_response(std::string code, std::string path)
 {
     std::string response = "HTTP/1.1 "+ code + " " + get_http_msg(atoi(code.c_str()))+ "\r\n"+
                             "Location: "+ path + "\r\n"
-                            +"Content-Length: 0\r\n"+
-                            +"Connection: close\r\n"+
+                            +"Content-Length: 10\r\n"
+                            +"Connection: close\r\n"
                             +"\r\n";
     return response;
 }
@@ -20,7 +20,6 @@ int CheckRequest::get_server(void)
 {
     if (!client)
         return 0;
-    std::cout << "hello\n";
     server = &client->config->findServerByHost(client->parsed_request.host);
     if (!server)
     {
@@ -119,10 +118,9 @@ int CheckRequest::check_root(void)
         return (client->generate_error_response(414), client->status = WRITE, -1);
     return 1;
 }
+
 void CheckRequest::cgi_or_static(void)
 {
-    if (root[root.size() - 1] == '/')
-        return (client->status = STATIC, (void)0);
     size_t pos = root.rfind(".");
     if (pos != std::string::npos)
     {
@@ -133,6 +131,7 @@ void CheckRequest::cgi_or_static(void)
             inter = location->getCgiHandler(ext);
             if (!inter.empty())
             {
+                compailer = inter;
                 client->status = CGI_RUNNING;
                 return ;
             }
@@ -142,6 +141,7 @@ void CheckRequest::cgi_or_static(void)
             inter = server->getCgiHandler(ext);
             if (!inter.empty())
             {
+                compailer = inter;
                 client->status = CGI_RUNNING;
                 return ;
             }
@@ -150,8 +150,23 @@ void CheckRequest::cgi_or_static(void)
     client->status = STATIC;
 }
 
-CheckRequest::CheckRequest() : server(NULL), location(NULL), client(NULL) {};
-CheckRequest::CheckRequest(Client& client) : server(NULL), location(NULL), client(&client) {};
+CheckRequest::CheckRequest() : is_a_dir(false), server(NULL), location(NULL), client(NULL) {};
+CheckRequest::CheckRequest(Client& client) : is_a_dir(false), server(NULL), location(NULL), client(&client) {};
+
+int CheckRequest::evaluate_resource(std::string path)
+{
+    struct stat file_info;
+
+    if (stat(path.c_str(), &file_info) == -1)
+        return (client->generate_error_response(404), client->status = WRITE, -1);
+
+    if (S_ISDIR(file_info.st_mode))
+        return (is_a_dir = true, 1);
+    else if (S_ISREG(file_info.st_mode))
+        return (1);
+    else
+        return (client->generate_error_response(403), client->status = WRITE, -1);
+}
 
 void    CheckRequest::validate()
 {
@@ -175,6 +190,9 @@ void    CheckRequest::validate()
         return ;
     std::cout << "checking root\n";
     if (check_root() == -1)
+        return ;
+    std::cout << "checking file existence\n";
+    if (evaluate_resource(root) == -1)
         return ;
     std::cout << "checking cgi or not\n";
     cgi_or_static();

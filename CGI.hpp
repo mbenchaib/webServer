@@ -3,34 +3,50 @@
 
 #include <vector>
 
-class Client;      // forward declaration
+class Client;
+
+void    clear_memory(char **arr);
 
 class CGI
 {
     public:
-        int                         pipes[2];       //  pipes fd fhal minishell
-        int                         pid;            // pid dyal child
+        int                         pipes[2];
+        int                         pid;
 
-        std::vector<std::string>    envs;           // hado envs dyal child
-        std::vector<std::string>    args;           // hado ars dyal child
+        char                        **env;
+        char                        **arg;
 
         int                         is_child_running;
-
+        int                         is_child_finished;
         Client*                     client;
 
-        CGI() : client(NULL), pid(-1), is_child_running(0)
+        CGI() : client(NULL), pid(-1), is_child_running(0), env(NULL), arg(NULL)
         {
             pipes[0] = -1;
             pipes[1] = -1;
+        }
+        ~CGI()
+        {
+            if (pipes[0] != -1) close(pipes[0]);
+            if (pipes[1] != -1) close(pipes[1]);
+            clear_memory(env);
+            clear_memory(arg);
         }
         void setClient(Client *c)
         {
             client = c;
         }
 
-        void run_cgi();
-        void check_cgi();
-        char **create_envs();
+        int     run_cgi(void);
+        void    check_cgi(void);
+        
+        void    create_envs(void);
+        void    create_args(void);
+
+        int     pipe_init(void);
+        int     checking_permission(void);
+        
+        void    starting_cgi(void);
 };
 
 #endif

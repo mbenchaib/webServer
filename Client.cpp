@@ -126,7 +126,7 @@ int Client::check_recv_error(int bytes)
         std::cout << "client disconnected in midel of sending request\n";
         status = CLOSE;
         return 0; 
-    } 
+    }
     else if (bytes == -1)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -143,7 +143,7 @@ int Client::check_recv_error(int bytes)
 void Client::reading_request(void)
 {
     if (status != READ) return;
-    
+
     char buffer[4096];
     while (true)
     {
@@ -163,7 +163,6 @@ void Client::reading_request(void)
         else if (pos == std::string::npos && raw_buffer.size() > 8192)
             return (status = WRITE, generate_error_response(431), (void)0);
     }
-
     if (!read_body)
     {
         size_t pos = raw_buffer.find("\r\n\r\n");
@@ -198,6 +197,7 @@ void Client::reading_request(void)
         }
         else
         {
+            std::cout << "hello\n";
             parsed_request.body.append(raw_buffer);
             raw_buffer.clear();
 
