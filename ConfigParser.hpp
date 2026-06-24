@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 20:40:02 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/09 17:31:18 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/24 12:31:24 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <fstream>
 #include <vector>
+#include <map>
 
 struct Directive
 {
@@ -150,20 +151,21 @@ struct Server
     
     Location* findLocation(const std::string& uri)
     {
-        std::vector<int> l;
+        Location*   longest = NULL;
+        size_t      len = 0;
         
         for (size_t i = 0; i < locations.size(); i++)
         {
-            std::size_t pos;
-            if (!(pos = uri.find(locations[i].path)))
-                l.push_back(locations[i].path.size());
+            if (uri.find(locations[i].path) == 0)
+            {
+                if (locations[i].path.size() > len)
+                {
+                    len = locations[i].path.size();
+                    longest = &locations[i];
+                }
+            }
         }
-        if (!l.size())
-        {
-            std::vector<int>::iterator it = std::max_element(l.begin(), l.end());
-            return (&locations[*it]);
-        }
-        return (NULL);
+        return (longest);
     }
 };
 
