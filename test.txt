@@ -4,7 +4,7 @@ server {
     root /var/www/site1;
     index index.html index.htm;
 
-    max_body 99999999999999999999;
+    max_body 4254;
 
     error_page 404 /errors/404.html;
     error_page 404 /errors/404.html;

@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 22:06:50 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/08 22:23:05 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/26 13:35:15 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ static bool isValidPath(const std::vector<std::string> values)
 {
     std::string value = values.back();
 
-    if (value[0] != '/')
+    if (value[0] != '/' && value[0] != '.')
         return (false);
 
     for (size_t i = 1; i < value.size(); i++)
