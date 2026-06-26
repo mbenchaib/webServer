@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigParser.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sael-kha <sael-kha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 20:40:02 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/15 14:14:24 by sael-kha         ###   ########.fr       */
+/*   Updated: 2026/06/26 17:39:13 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include <map>
 
 struct Directive
 {
@@ -168,24 +169,23 @@ struct Server
             return (size);
     }
     
-    Location *findLocation(const std::string &uri)
+    Location* findLocation(const std::string& uri)
     {
-        Location *best = NULL;
-        size_t best_len = 0;
-
+        Location*   longest = NULL;
+        size_t      len = 0;
+        
         for (size_t i = 0; i < locations.size(); i++)
         {
-            if (uri.compare(0, locations[i].path.size(), locations[i].path) == 0)
+            if (uri.find(locations[i].path) == 0)
             {
-                if (locations[i].path.size() > best_len)
+                if (locations[i].path.size() > len)
                 {
-                    best = &locations[i];
-                    best_len = locations[i].path.size();
+                    len = locations[i].path.size();
+                    longest = &locations[i];
                 }
             }
         }
-
-        return best;
+        return (longest);
     }
 };
 

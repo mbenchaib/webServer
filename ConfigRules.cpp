@@ -6,11 +6,12 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 22:06:50 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/06 16:21:53 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/26 17:43:33 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ConfigRules.hpp"
+#include <_ctype.h>
 #include <cstddef>
 #include <vector>
 #include <map>
@@ -108,7 +109,7 @@ static bool isValidPath(const std::vector<std::string> values)
 {
     std::string value = values.back();
 
-    if (value[0] != '/')
+    if (value[0] != '/' && value[0] != '.')
         return (false);
 
     for (size_t i = 1; i < value.size(); i++)
@@ -290,7 +291,7 @@ void initRules(std::map<std::string, DirectiveRule>& serverRules, std::map<std::
     
     locationRules["methods"]     =   DirectiveRule(1, 3, TYPE_METHOD, false, false);
     locationRules["root"]        =   DirectiveRule(1, 1, TYPE_PATH, false, false);
-    locationRules["index"]         =   DirectiveRule(1, UNSPECIFIED_MAX_VALUES, TYPE_FILENAME, false, false);
+    locationRules["index"]       =   DirectiveRule(1, UNSPECIFIED_MAX_VALUES, TYPE_FILENAME, false, false);
     locationRules["autoindex"]   =   DirectiveRule(1, 1, TYPE_ON_OFF, false, false);
     locationRules["max_body"]    =   DirectiveRule(1, 1, TYPE_SIZE, false, false);
     locationRules["cgi"]         =   DirectiveRule(2, 2, TYPE_CGI, true, false);

@@ -312,6 +312,7 @@ void    CGI::starting_cgi(void)
 {
     if (status == NOT_RUNNING)
     {
+        signal(SIGPIPE, SIG_IGN);
         if(checking_permission() == -1)
             return ;
         if(pipe_init() == -1)
