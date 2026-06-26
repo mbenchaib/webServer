@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include <map>
+#include <string>
+#include <vector>
 #define UNSPECIFIED_MAX_VALUES 10
 
 enum ValueType

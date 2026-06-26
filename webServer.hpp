@@ -15,7 +15,6 @@
 #include <vector>
 #include <poll.h>
 #include "Client.hpp"
-#include <sys/event.h>
 #include "ConfigParser.hpp"
 
 #define BACKLOG 128

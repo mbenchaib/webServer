@@ -11,13 +11,13 @@
 /* ************************************************************************** */
 
 #include "ConfigRules.hpp"
-#include <_ctype.h>
 #include <cstddef>
 #include <vector>
 #include <map>
 #include <cctype>
 #include <cerrno>
 #include <string>
+#include <climits>
 
 
                             /* =========================================

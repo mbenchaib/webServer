@@ -28,7 +28,7 @@ class Request
         std::string                         host;
         std::string                         body;
         std::string                         content_type;
-        unsigned long                       body_len;
+        size_t                              body_len;
 
         bool                                valid;
         bool                                is_chunked;

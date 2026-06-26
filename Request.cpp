@@ -1,5 +1,6 @@
 #include "Request.hpp"
 #include <algorithm>
+#include <climits>
 
 void trim_crlf(std::string& s)
 {
@@ -63,7 +64,7 @@ void    Request::check_body_len(void)
         
         body_len = strtoul(cl.c_str(), NULL, 10);
         
-        if (body_len > INT_MAX)  { error_code = 413, valid = false; return; }
+        // if (body_len > INT_MAX)  { error_code = 413, valid = false; return; }
     }
     else if (method == "POST")
     {

@@ -1,4 +1,6 @@
 #include "Client.hpp"
+#include <climits>
+#include <cstring>
 
 std::string get_http_msg(int code)
 {
@@ -148,29 +150,27 @@ void Client::reading_request(void)
     while (true)
     {
         ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
+        std::cout << "reading from fd\n";
         int state = check_recv_error(bytes);
         
-        if (state == 0) return; 
-        if (state == -1) break;
+        if (state == -1) {std::cout << "break with -1\n"; break;}  // Only break on real error
+        if (state == 0) {std::cout << "break with 0\n"; return;}   // Break on would-block/EOF (don't return yet!)
 
         raw_buffer.append(buffer, bytes);
-
-        size_t pos = raw_buffer.find("\r\n\r\n");
-        if (pos != std::string::npos && pos > 8192)
-            return (status = WRITE, generate_error_response(431), (void)0);
-        else if (pos != std::string::npos && raw_buffer.size() - (pos + 4) > INT_MAX)
-            return (status = WRITE, generate_error_response(413), (void)0);
-        else if (pos == std::string::npos && raw_buffer.size() > 8192)
-            return (status = WRITE, generate_error_response(431), (void)0);
     }
+
+    // Parse headers (outside the loop)
     if (!read_body)
     {
+        std::cout << "we check for empty line\n";
         size_t pos = raw_buffer.find("\r\n\r\n");
         if (pos != std::string::npos)
         {
+            std::cout << "we found empty line\n";
             std::string header_block = raw_buffer.substr(0, pos);
-            raw_buffer.erase(0, pos + 4); 
-            
+            std::cout << "we cut header body\n";
+            raw_buffer = raw_buffer.substr(pos + 4);
+            std::cout << "we cut body and it size is " << raw_buffer.size() << '\n';
             parsed_request.parse_request(header_block);
             if (!parsed_request.valid)
             {
@@ -178,26 +178,46 @@ void Client::reading_request(void)
                 status = WRITE;
                 return;
             }
+
+            // Validate body length
+            // if (parsed_request.body_len > INT_MAX)
+            // {
+            //     generate_error_response(413);
+            //     status = WRITE;
+            //     return;
+            // }
             read_body = 1;
+        }
+        else if (raw_buffer.size() > 8192)
+        {
+            // Headers too large
+            generate_error_response(431);
+            status = WRITE;
+            return;
         }
     }
 
+    // Parse body (outside the loop)
     if (read_body)
     {
+        std::cout << "now we parsing the body\n";
         if (parsed_request.is_chunked)
         {
+            std::cout << "parsing chunked body\n";
             parsed_request.parse_chunked_body(raw_buffer);
             if (parsed_request.chunk_state == CHUNK_DONE)
                 status = VALIDATION;
             else if (parsed_request.chunk_state == CHUNK_ERROR)
-            {
-                generate_error_response(400);
-                status = WRITE;
-            }
+                { generate_error_response(400); status = WRITE; }
+            parsed_request.body_len = parsed_request.body.size();
+            
+            // if (parsed_request.body.size() > INT_MAX)
+            //     { generate_error_response(400); status = WRITE; }
         }
         else
         {
-            std::cout << "hello\n";
+            std::cout << "parsing normal body\n";
+
             parsed_request.body.append(raw_buffer);
             raw_buffer.clear();
 

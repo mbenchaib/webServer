@@ -6,7 +6,7 @@
 /*   By: sael-kha <sael-kha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/17 10:42:33 by sael-kha         ###   ########.fr       */
+/*   Updated: 2026/06/26 13:30:29 by sael-kha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <sys/event.h>
 #include <iostream>
 
                             // =======================
@@ -165,8 +164,6 @@ void    WebServer::HandleClient(struct pollfd& fd)
     {
         std::cout << "server read now\n";
         clian.reading_request();
-        if (clian.status != READ || clian.status != CLOSE)
-            fd.events = POLLOUT;
     }
     // hnakanvalidi wach request huwahadak awla
     if (clian.status == VALIDATION)
@@ -184,10 +181,8 @@ void    WebServer::HandleClient(struct pollfd& fd)
     // hnaya cankhadem cgi ou canbuidy response
     if (clian.status == CGI_RUNNING && fd.revents & POLLOUT)
     {
-        std::cout << "builting CGI response now\n";
-        clian.status = WRITE;
-        // clian.cgi.run_cgi();
-        // clian.cgi.check_cgi();
+        // std::cout << "builting CGI response now\n";
+        clian.cgi.starting_cgi();
     }
     // hnaya cancoun salit men building response ou cansardo n client
     if (clian.status == WRITE && fd.revents & POLLOUT)
