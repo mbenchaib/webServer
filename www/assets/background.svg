@@ -1,0 +1,24 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="b1" cx="18%" cy="12%" r="42%">
+      <stop offset="0%"   stop-color="#6366f1" stop-opacity="0.38"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b2" cx="86%" cy="18%" r="46%">
+      <stop offset="0%"   stop-color="#22d3ee" stop-opacity="0.26"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b3" cx="58%" cy="92%" r="52%">
+      <stop offset="0%"   stop-color="#8b5cf6" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="46" height="46" patternUnits="userSpaceOnUse">
+      <path d="M46 0 H0 V46" fill="none" stroke="#ffffff" stroke-opacity="0.03" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1440" height="900" fill="#0a0b10"/>
+  <rect width="1440" height="900" fill="url(#grid)"/>
+  <rect width="1440" height="900" fill="url(#b1)"/>
+  <rect width="1440" height="900" fill="url(#b2)"/>
+  <rect width="1440" height="900" fill="url(#b3)"/>
+</svg>

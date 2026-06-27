@@ -3,15 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   webServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: roubelka <roubelka@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/26 17:58:49 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/27 00:33:15 by roubelka         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webServer.hpp"
 #include "Exceptions.hpp"
+#include "Response.hpp"
 #include <cerrno>
 #include <cstddef>
 #include <cstring>
@@ -182,8 +183,7 @@ void    WebServer::HandleClient(struct pollfd& fd)
     if (clian.status == STATIC && fd.revents & POLLOUT)
     {
         std::cout << "builting STATIC response now\n";
-        clian.status = WRITE;
-        // clian.sending_response();
+        Response(clian).build();
     }
     // hnaya cankhadem cgi ou canbuidy response
     if (clian.status == CGI_RUNNING && fd.revents & POLLOUT)
