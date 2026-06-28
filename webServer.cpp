@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: roubelka <roubelka@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/27 00:33:15 by roubelka         ###   ########.fr       */
+/*   Updated: 2026/06/28 14:52:58 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,32 +136,37 @@ void WebServer::addListenFds()
 
 void WebServer::acceptClient(int serv_sd)
 {
-    int fd_client;
-    if ((fd_client = accept(serv_sd, NULL, NULL)) == -1)
+    while (true)
     {
-        std::cerr << "accept failed on socket "
-                  << serv_sd
-                  << ": "
-                  << strerror(errno)
-                  << "\n";
-        return ;
-    }
-    
-    if (fcntl(fd_client, F_SETFL, O_NONBLOCK) == -1)
-    {
-        close(fd_client);
-        return;
-    }
-    
-    struct pollfd   pfd;
-    
-    pfd.fd = fd_client;
-    pfd.events = (POLLIN | POLLOUT);
-    pfds.push_back(pfd);
+        int fd_client;
+        if ((fd_client = accept(serv_sd, NULL, NULL)) == -1 && (errno != EAGAIN && errno != EWOULDBLOCK))
+        {
+            std::cerr << "accept failed on socket "
+                    << serv_sd
+                    << ": "
+                    << strerror(errno)
+                    << "\n";
+            return ;
+        }
+        else if (fd_client == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+            return ;
+        
+        if (fcntl(fd_client, F_SETFL, O_NONBLOCK) == -1)
+        {
+            close(fd_client);
+            return;
+        }
+        
+        struct pollfd   pfd;
+        
+        pfd.fd = fd_client;
+        pfd.events = (POLLIN | POLLOUT);
+        pfds.push_back(pfd);
 
-    clients.insert(std::make_pair(pfd.fd, Client(pfd.fd, config)));
-    clients[pfd.fd].cgi.setClient(&clients[pfd.fd]);
-    clients[pfd.fd].checker.set_client(clients[pfd.fd]);
+        clients.insert(std::make_pair(pfd.fd, Client(pfd.fd, config)));
+        clients[pfd.fd].cgi.setClient(&clients[pfd.fd]);
+        clients[pfd.fd].checker.set_client(clients[pfd.fd]); 
+    }
 }
 
 void    WebServer::HandleClient(struct pollfd& fd)

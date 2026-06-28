@@ -62,15 +62,13 @@ std::string Response::build_response(int code, const std::string& content_type, 
 
 // ===== config helpers =====
 
-// index: location l3wel, men b3d server ila location ma3ndosh index directive
+// index: location lwel, men b3d server ila location ma3ndosh index directive
 std::string Response::get_index_path(void)
 {
     Directive* dir = NULL;
 
     if (client->checker.location)
         dir = client->checker.location->getDirective("index");
-    if (!dir && client->checker.server)
-        dir = client->checker.server->getDirective("index");
     if (!dir)
         return ("");
 
@@ -178,7 +176,7 @@ void Response::serve_directory(void)
     }
 
     // 2. ma kayn index -> autoindex ila on
-    if (autoindex_enabled())
+    else if (autoindex_enabled())
     {
         generate_autoindex(client->checker.root);
         return;

@@ -6,12 +6,12 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 22:06:50 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/26 17:43:33 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/28 12:20:03 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ConfigRules.hpp"
-#include <_ctype.h>
+#include <ctype.h>
 #include <cstddef>
 #include <vector>
 #include <map>
