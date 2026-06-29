@@ -19,70 +19,7 @@ void    clear_memory(char **arr)
 
 void CGI::building_response(void)
 {
-    // 1. Find the split between headers and body
-    size_t header_end = cgi_buffer.find("\r\n\r\n");
-    if (header_end == std::string::npos) 
-    {
-        // Script didn't output valid headers
-        client->generate_error_response(502); 
-        client->status = WRITE;
-        return;
-    }
-
-    // 2. Extract CGI headers and body
-    std::string cgi_headers = cgi_buffer.substr(0, header_end + 2); // Keep one \r\n
-    std::string cgi_body = cgi_buffer.substr(header_end + 4);       // Skip the \r\n\r\n
-
-    // 3. Determine the status code
-    std::string status_line = "";
-
-    // 2. DEFENSIVE CHECK: Did the script output its own HTTP line?
-    if (cgi_headers.compare(0, 5, "HTTP/") == 0)
-    {
-        // Extract the script's HTTP line and remove it from cgi_headers
-        size_t line_end = cgi_headers.find('\n');
-        if (line_end != std::string::npos)
-        {
-            status_line = cgi_headers.substr(0, line_end + 1); // Includes the \r\n
-            cgi_headers.erase(0, line_end + 1);
-        }
-    }
-    else
-    {
-        // 3. Normal CGI parsing: Look for "Status:"
-        status_line = "HTTP/1.1 "; 
-        size_t pos = cgi_headers.find("Status: ");
-        if (pos == std::string::npos)
-            pos = cgi_headers.find("status: ");
-
-        if (pos != std::string::npos)
-        {
-            size_t line_end = cgi_headers.find('\r', pos);
-            status_line += cgi_headers.substr(pos + 8, line_end - pos - 8) + "\r\n";
-            cgi_headers.erase(pos, line_end - pos + 2); // Strip the "Status:" line
-        }
-        else
-        {
-            status_line += "200 OK\r\n"; 
-        }
-    }
-
-    // 4. Build the final HTTP response (Order is now guaranteed to be correct!)
-    std::string final_response = status_line;
-    
-    // Add essential server headers
-    std::ostringstream len_stream;
-    len_stream << cgi_body.size();
-    final_response += "Content-Length: " + len_stream.str() + "\r\n";
-    final_response += "Server: webserv/1.0\r\n";
-
-    // Append the CGI's headers, the final blank line, and the body
-    final_response += cgi_headers;
-    final_response += "\r\n"; 
-    final_response += cgi_body;
-
-    // 5. Hand it off to the client to send
-    client->response = final_response;
+    client->response = cgi_buffer;
     client->status = WRITE;
 }
 
@@ -96,7 +33,7 @@ int CGI::write_to_child()
         data_send += bytes;
 
     if (bytes == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
-        return (std::cout << strerror(errno) << '\n', client->generate_error_response(500), -1);
+        return (std::cout << strerror(errno) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
     if (data_send == client->parsed_request.body.size())
     {
         writing = 1;
@@ -140,7 +77,7 @@ int CGI::reading_from_child()
     while ((bytes = read(pipe_out[0], buffer, sizeof(buffer))) > 0)
         cgi_buffer.append(buffer, bytes);
     if (bytes == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
-        return (std::cout << strerror(errno) << '\n', client->generate_error_response(500), -1);
+        return (std::cout << strerror(errno) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
     if (bytes == 0)
     {
         reading = 1;
@@ -257,6 +194,14 @@ int CGI::run_cgi()
 
 int CGI::checking_permission()
 {
+    struct stat file_info;
+
+    if (stat(client->checker.root.c_str(), &file_info) == -1)
+        return (client->generate_error_response(404), client->status = WRITE, -1);
+
+    if (!S_ISREG(file_info.st_mode))
+        return (client->generate_error_response(403), client->status = WRITE, -1);
+
     if (access(client->checker.compailer.c_str(), X_OK) != 0)
         return (client->generate_error_response(403), client->status = WRITE, -1);
 

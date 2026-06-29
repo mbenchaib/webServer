@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webServer.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sael-kha <sael-kha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/26 23:06:52 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/26 17:59:33 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/29 10:28:58 by sael-kha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include "Client.hpp"
 #include "ConfigParser.hpp"
 
-#define BACKLOG 128
+#define BACKLOG 1024
 #define MAX_EVENTS 64
 
 class Client;

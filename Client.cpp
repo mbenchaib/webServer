@@ -96,27 +96,14 @@ void Client::generate_error_response(int code)
 
 Client::Client(void) : fd(-1), bytes_send_to_client(0), read_body(0), config(NULL)
 {
-    cgi.setClient(this);
-    checker.set_client(*this);
+    std::cout << "client have created by default\n";
     status = READ;
-    response = "HTTP/1.0 200 OK\r\n"
-        "Content-Type: text/html\r\n"
-        "Content-Length: 20\r\n"
-        "\r\n"
-        "<h1>Hello World</h1>";
 }
 
 Client::Client(int fd, Config& config) : fd(fd), bytes_send_to_client(0), read_body(0), config(&config)
 {
     std::cout << "client have created\n";
-    cgi.setClient(this);
-    checker.set_client(*this);
     status = READ;
-    response = "HTTP/1.0 200 OK\r\n"
-        "Content-Type: text/html\r\n"
-        "Content-Length: 20\r\n"
-        "\r\n"
-        "<h1>Hello World</h1>";
 }
         
 
@@ -153,8 +140,8 @@ void Client::reading_request(void)
         std::cout << "reading from fd\n";
         int state = check_recv_error(bytes);
         
-        if (state == -1) {std::cout << "break with -1\n"; break;}  // Only break on real error
-        if (state == 0) {std::cout << "break with 0\n"; return;}   // Break on would-block/EOF (don't return yet!)
+        if (state == -1) {std::cout << "break with -1\n"; break;}
+        if (state == 0) {std::cout << "break with 0\n"; return;}
 
         raw_buffer.append(buffer, bytes);
     }
@@ -179,13 +166,13 @@ void Client::reading_request(void)
                 return;
             }
 
-            // Validate body length
-            // if (parsed_request.body_len > INT_MAX)
-            // {
-            //     generate_error_response(413);
-            //     status = WRITE;
-            //     return;
-            // }
+            if (parsed_request.method != "POST")
+            {
+                parsed_request.body.clear();
+                parsed_request.body_len = 0;
+                status = VALIDATION;
+                return;
+            }
             read_body = 1;
         }
         else if (raw_buffer.size() > 8192)

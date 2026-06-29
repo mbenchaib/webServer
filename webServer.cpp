@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sael-kha <sael-kha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/28 14:52:58 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/29 10:37:14 by sael-kha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,37 +138,56 @@ void WebServer::acceptClient(int serv_sd)
 {
     while (true)
     {
-        int fd_client;
-        if ((fd_client = accept(serv_sd, NULL, NULL)) == -1 && (errno != EAGAIN && errno != EWOULDBLOCK))
+        int fd_client = accept(serv_sd, NULL, NULL);
+
+        if (fd_client == -1)
         {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                break;
+
             std::cerr << "accept failed on socket "
-                    << serv_sd
-                    << ": "
-                    << strerror(errno)
-                    << "\n";
-            return ;
+                      << serv_sd
+                      << ": "
+                      << strerror(errno)
+                      << '\n';
+            break;
         }
-        else if (fd_client == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
-            return ;
-        
+
         if (fcntl(fd_client, F_SETFL, O_NONBLOCK) == -1)
         {
             close(fd_client);
-            return;
+            continue;
         }
-        
-        struct pollfd   pfd;
-        
+
+        struct pollfd pfd;
+
         pfd.fd = fd_client;
         pfd.events = (POLLIN | POLLOUT);
+        pfd.revents = 0;
+
         pfds.push_back(pfd);
 
-        clients.insert(std::make_pair(pfd.fd, Client(pfd.fd, config)));
-        clients[pfd.fd].cgi.setClient(&clients[pfd.fd]);
-        clients[pfd.fd].checker.set_client(clients[pfd.fd]); 
+        clients[fd_client] = Client(fd_client, config);
+        
+        clients[fd_client].cgi.setClient(&clients[fd_client]);
+        clients[fd_client].checker.set_client(clients[fd_client]);
+        clients[fd_client].time = time(NULL);
     }
 }
 
+int timeout_check(Client& client)
+{
+    if ((time(NULL) - client.time) > 200)
+    {
+        if (client.cgi.pid != -1)
+            client.generate_error_response(504);
+        else
+            client.generate_error_response(408);
+        client.status = WRITE;
+        return 1;
+    }
+    return 0;
+}
 void    WebServer::HandleClient(struct pollfd& fd)
 {
     Client& clian = clients[fd.fd];
@@ -197,7 +216,7 @@ void    WebServer::HandleClient(struct pollfd& fd)
         clian.cgi.starting_cgi();
     }
     // hnaya cancoun salit men building response ou cansardo n client
-    if (clian.status == WRITE && fd.revents & POLLOUT)
+    if ((clian.status == WRITE || timeout_check(clian)) && fd.revents & POLLOUT)
     {
         clian.parsed_request.print();
         clian.sending_response();

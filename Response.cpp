@@ -69,6 +69,8 @@ std::string Response::get_index_path(void)
 
     if (client->checker.location)
         dir = client->checker.location->getDirective("index");
+    else
+        dir = client->checker.server->getDirective("index");
     if (!dir)
         return ("");
 
@@ -96,6 +98,8 @@ bool Response::autoindex_enabled(void)
 
     if (client->checker.location)
         dir = client->checker.location->getDirective("autoindex");
+    else
+        dir = client->checker.server->getDirective("autoindex");
     if (!dir)
         return (false);
     return (dir->getValues()[0] == "on");
@@ -107,6 +111,11 @@ std::string Response::get_upload_path(void)
     if (client->checker.location)
     {
         Directive* dir = client->checker.location->getDirective("upload_path");
+        if (dir)
+            return (dir->getValues()[0]);
+    }else
+    {
+        Directive* dir = client->checker.server->getDirective("upload_path");
         if (dir)
             return (dir->getValues()[0]);
     }

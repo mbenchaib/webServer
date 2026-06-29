@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigRules.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sael-kha <sael-kha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 22:06:50 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/28 12:20:03 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/29 10:55:12 by sael-kha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,8 +214,8 @@ static bool isValidReturn(const std::vector<std::string> values)
 {
     if (values.size() == 1)
     {
-        if (!isValidNumber(values[0], 100, 599))
-            return (false);
+        if (isValidNumber(values[0], 100, 599))
+            return (true);
     }
     else
     {

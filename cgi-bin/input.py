@@ -11,7 +11,9 @@ def main():
     escaped_data = html.escape(input_data)
     
     # Print as HTML
-    print("Content-Type: text/html")
+    print("HTTP/1.0 200 OK\r\n")
+    print("Content-Type: text/html\r\n")
+    print("Content-Lenght: 500\r\n")
     print("\r\n\r\n")
     print("<!DOCTYPE html>")
     print("<html>")

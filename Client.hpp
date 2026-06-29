@@ -36,6 +36,7 @@ class Client
     public:
         Config*         config;         // config dyal server
         CGI             cgi;            // cgi class fih nrany cgi
+        std::time_t     time;
 
         int             fd;             // socket_fd dyal client from accept
         hala            status;         // status wach client ki9ra daba awla kisared respone awla CLOSE "sf sala"

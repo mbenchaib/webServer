@@ -1,0 +1,17 @@
+ZIDT HAD LINE F Response::get_index_path
+    else
+        dir = client->checker.server->getDirective("index");
+
+ZIDT HAD LINE F Response::autoindex_enabled
+    else
+        dir = client->checker.server->getDirective("autoindex");
+
+ZIDT HAD LINE F Response::get_upload_path
+    else
+    {
+        Directive* dir = client->checker.server->getDirective("upload_path");
+        if (dir)
+            return (dir->getValues()[0]);
+    }
+
+OU MSAHT MEN CheckRequest CLASS "is_a_dir" SO KHASEK A RACHID TVALIDI FILES 3LA HASAB METHOD LI 3ANDEK

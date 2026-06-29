@@ -2,6 +2,7 @@
 #define CGI_HPP
 
 #include <vector>
+#include <signal.h>
 
 class Client;
 
@@ -52,6 +53,23 @@ class CGI
             if (pipe_out[1] != -1) close(pipe_out[1]);
             clear_memory(env);
             clear_memory(arg);
+
+            int status = 0;
+            int result = waitpid(pid, &status, WNOHANG);
+    
+            if (result == 0)
+            {
+                std::cout << "we killing the child\n";
+                kill(pid, SIGKILL);
+                waitpid(pid, &status, 0);
+            } else if (result == pid)
+            {
+                if (WIFEXITED(status)) {
+                    printf("Child %d exited with code %d\n", pid, WEXITSTATUS(status));
+                } else if (WIFSIGNALED(status)) {
+                    printf("Child %d killed by signal %d\n", pid, WTERMSIG(status));
+                }
+            }
         }
         void setClient(Client *c)
         {
