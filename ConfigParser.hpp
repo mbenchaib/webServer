@@ -6,19 +6,16 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 20:40:02 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/26 17:39:13 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/29 21:46:34 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#ifndef CONFIGPARSER_HPP
+#define CONFIGPARSER_HPP
 
-#pragma once
-
-#include <algorithm>
 #include <cstddef>
 #include <fstream>
 #include <vector>
-#include <iostream>
-#include <map>
 
 struct Directive
 {
@@ -218,3 +215,5 @@ private:
 public:
     Config parseFile(const std::string& filename);
 };
+
+#endif

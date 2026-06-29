@@ -3,12 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   webServer.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sael-kha <sael-kha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/26 23:06:52 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/29 10:28:58 by sael-kha         ###   ########.fr       */
+/*   Updated: 2026/06/29 21:41:33 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#ifndef WEBSERVER_HPP
+#define WEBSERVER_HPP
 
 #include <map>
 #include <string>
@@ -42,3 +45,5 @@ public:
     ~WebServer();
     void run();
 };
+
+#endif

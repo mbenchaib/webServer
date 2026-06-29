@@ -6,9 +6,12 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 19:10:46 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/05/19 16:51:16 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/29 21:44:16 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#ifndef EXCEPTIONS_HPP
+#define EXCEPTIONS_HPP
 
 #include <exception>
 #include <string>
@@ -64,3 +67,5 @@ public:
     ~NoListenSocketException() throw() {}
     const char *what() const throw();
 };
+
+#endif
