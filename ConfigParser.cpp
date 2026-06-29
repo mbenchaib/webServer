@@ -221,8 +221,8 @@ static void validateDirectives(const std::vector<Directive>& directives, const s
     while (iter != end)
     {
         iter_map = DirRules.find(iter->name);
-        if (!(iter_map != DirRules.end() && iter->values.size() >= iter_map->second.minValues
-                                     && iter->values.size() <= iter_map->second.maxValues))
+        if (!(iter_map != DirRules.end() && iter->values.size() >= static_cast<size_t>(iter_map->second.minValues)
+                                     && iter->values.size() <= static_cast<size_t>(iter_map->second.maxValues)))
             throw ConfigValidationError("Error: Unknown directive or invalid number of directive values");
 
         if (hasDuplicate(iter, end, iter_map->second.allowDuplicate))

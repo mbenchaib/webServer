@@ -19,6 +19,7 @@
 #include <cerrno>
 #include <string>
 #include <climits>
+#include<cstdlib>
 
 
                             /* =========================================
