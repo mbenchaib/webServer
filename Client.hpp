@@ -36,7 +36,7 @@ class Client
     public:
         Config*         config;         // config dyal server
         CGI             cgi;            // cgi class fih nrany cgi
-        std::time_t     time;
+        time_t          time;
 
         int             fd;             // socket_fd dyal client from accept
         hala            status;         // status wach client ki9ra daba awla kisared respone awla CLOSE "sf sala"
@@ -52,7 +52,10 @@ class Client
 
         //difault constractor just for test 
         Client(void);
+        Client(const Client& other);
         Client(int fd, Config& config);
+        Client& operator=(const Client& other);
+        ~Client();
         // hna can9ra request ou kanparsih
         void    reading_request(void);
         // had can sared response n client

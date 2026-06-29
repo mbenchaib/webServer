@@ -1,14 +1,21 @@
 #include "CheckRequest.hpp"
 #include "Client.hpp"
 
+static std::string size_to_string(size_t value)
+{
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
+}
+
 std::string retrun_response(std::string code, std::string path)
 {
     std::string response = "HTTP/1.1 "+ code + " " + get_http_msg(atoi(code.c_str()))+ "\r\n"+
                             "Location: "+ path + "\r\n"
-                            +"Content-Length: " + std::to_string(19 + path.size()) + "\r\n"
+                            +"Content-Length: " + size_to_string(13 + path.size()) + "\r\n"
                             +"Connection: close\r\n"
                             +"\r\n"
-                            +"return my nigga to " + path;
+                            +"returning to " + path;
     return response;
 }
 
@@ -129,9 +136,9 @@ int CheckRequest::check_root(void)
     std::string locationName = location ? location->path : "";
     std::string stripped_uri = removeLocationFromUri(client->parsed_request.path, locationName);
 
-    if (!root.empty() && root.back() != '/' && !stripped_uri.empty() && stripped_uri.front() != '/')
+    if (!root.empty() && root[root.size() - 1] != '/' && !stripped_uri.empty() && stripped_uri[0] != '/')
         root += "/";
-    else if (!root.empty() && root.back() == '/' && !stripped_uri.empty() && stripped_uri.front() == '/')
+    else if (!root.empty() && root[root.size() - 1] == '/' && !stripped_uri.empty() && stripped_uri[0] == '/')
         stripped_uri.erase(0, 1);
 
     root += stripped_uri;
@@ -173,8 +180,30 @@ void CheckRequest::cgi_or_static(void)
     client->status = STATIC;
 }
 
-CheckRequest::CheckRequest() : server(NULL), location(NULL), client(NULL) {};
-CheckRequest::CheckRequest(Client& client) : server(NULL), location(NULL), client(&client) {};
+CheckRequest::CheckRequest() : server(NULL), location(NULL), client(NULL),
+    is_a_dir(false), root(), compailer() {}
+
+CheckRequest::CheckRequest(const CheckRequest& other) : server(other.server),
+    location(other.location), client(other.client), is_a_dir(other.is_a_dir),
+    root(other.root), compailer(other.compailer) {}
+
+CheckRequest::CheckRequest(Client& client) : server(NULL), location(NULL),
+    client(&client), is_a_dir(false), root(), compailer() {}
+
+CheckRequest& CheckRequest::operator=(const CheckRequest& other)
+{
+    if (this == &other)
+        return *this;
+    server = other.server;
+    location = other.location;
+    client = other.client;
+    is_a_dir = other.is_a_dir;
+    root = other.root;
+    compailer = other.compailer;
+    return *this;
+}
+
+CheckRequest::~CheckRequest() {}
 
 void    CheckRequest::validate()
 {

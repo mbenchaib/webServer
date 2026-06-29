@@ -38,8 +38,10 @@ class Request
 
         std::map<std::string, std::string>  headers;
 
-        Request(void) : body_len(0), valid(true), is_chunked(false),
-            chunk_state(CHUNK_SIZE), current_chunk_size(0), error_code(0) {};
+        Request(void);
+        Request(const Request& other);
+        Request& operator=(const Request& other);
+        ~Request();
 
         void    print(void);
         void    check_body_len(void);

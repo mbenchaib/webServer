@@ -20,12 +20,16 @@ class CheckRequest
         Location    *location;
 
         Client      *client;
+        bool        is_a_dir;
 
         std::string root;
         std::string compailer;
 
         CheckRequest();
+        CheckRequest(const CheckRequest& other);
         CheckRequest(Client& client);
+        CheckRequest& operator=(const CheckRequest& other);
+        ~CheckRequest();
 
         void    set_client(Client& clian);
 

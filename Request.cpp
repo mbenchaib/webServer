@@ -2,6 +2,40 @@
 #include <algorithm>
 #include <climits>
 
+Request::Request(void) : error_code(0), method(), path(), query_string(), version(),
+    host(), body(), content_type(), body_len(0), valid(true), is_chunked(false),
+    chunk_state(CHUNK_SIZE), current_chunk_size(0), headers() {}
+
+Request::Request(const Request& other) : error_code(other.error_code),
+    method(other.method), path(other.path), query_string(other.query_string),
+    version(other.version), host(other.host), body(other.body),
+    content_type(other.content_type), body_len(other.body_len), valid(other.valid),
+    is_chunked(other.is_chunked), chunk_state(other.chunk_state),
+    current_chunk_size(other.current_chunk_size), headers(other.headers) {}
+
+Request& Request::operator=(const Request& other)
+{
+    if (this == &other)
+        return *this;
+    error_code = other.error_code;
+    method = other.method;
+    path = other.path;
+    query_string = other.query_string;
+    version = other.version;
+    host = other.host;
+    body = other.body;
+    content_type = other.content_type;
+    body_len = other.body_len;
+    valid = other.valid;
+    is_chunked = other.is_chunked;
+    chunk_state = other.chunk_state;
+    current_chunk_size = other.current_chunk_size;
+    headers = other.headers;
+    return *this;
+}
+
+Request::~Request() {}
+
 void trim_crlf(std::string& s)
 {
     if (!s.empty() && s[s.length() - 1] == '\n')

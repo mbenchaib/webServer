@@ -3,6 +3,100 @@
 #include <cstring>
 #include <cerrno>
 
+static char **duplicate_memory(char **arr)
+{
+    if (!arr)
+        return NULL;
+
+    size_t count = 0;
+    while (arr[count])
+        count++;
+
+    char **copy = new char*[count + 1];
+    for (size_t i = 0; i < count; ++i)
+    {
+        copy[i] = new char[std::strlen(arr[i]) + 1];
+        std::strcpy(copy[i], arr[i]);
+    }
+    copy[count] = NULL;
+    return copy;
+}
+
+CGI::CGI() : pid(-1), env(NULL), arg(NULL), writing(0), reading(0),
+    child_finished(0), data_send(0), pipe_closed(false), cgi_buffer(),
+    status(NOT_RUNNING), client(NULL)
+{
+    pipe_in[0] = -1;
+    pipe_in[1] = -1;
+    pipe_out[0] = -1;
+    pipe_out[1] = -1;
+}
+
+CGI::CGI(const CGI& other) : pid(-1), env(NULL), arg(NULL), writing(other.writing),
+    reading(other.reading), child_finished(other.child_finished), data_send(other.data_send),
+    pipe_closed(other.pipe_closed), cgi_buffer(other.cgi_buffer), status(other.status),
+    client(other.client)
+{
+    pipe_in[0] = -1;
+    pipe_in[1] = -1;
+    pipe_out[0] = -1;
+    pipe_out[1] = -1;
+    env = duplicate_memory(other.env);
+    arg = duplicate_memory(other.arg);
+}
+
+CGI& CGI::operator=(const CGI& other)
+{
+    if (this == &other)
+        return *this;
+
+    if (pipe_in[0] != -1) close(pipe_in[0]);
+    if (pipe_in[1] != -1) close(pipe_in[1]);
+    if (pipe_out[0] != -1) close(pipe_out[0]);
+    if (pipe_out[1] != -1) close(pipe_out[1]);
+    clear_memory(env);
+    clear_memory(arg);
+
+    pipe_in[0] = -1;
+    pipe_in[1] = -1;
+    pipe_out[0] = -1;
+    pipe_out[1] = -1;
+    pid = -1;
+
+    env = duplicate_memory(other.env);
+    arg = duplicate_memory(other.arg);
+    writing = other.writing;
+    reading = other.reading;
+    child_finished = other.child_finished;
+    data_send = other.data_send;
+    pipe_closed = other.pipe_closed;
+    cgi_buffer = other.cgi_buffer;
+    status = other.status;
+    client = other.client;
+    return *this;
+}
+
+CGI::~CGI()
+{
+    if (pipe_in[0] != -1) close(pipe_in[0]);
+    if (pipe_in[1] != -1) close(pipe_in[1]);
+    if (pipe_out[0] != -1) close(pipe_out[0]);
+    if (pipe_out[1] != -1) close(pipe_out[1]);
+    clear_memory(env);
+    clear_memory(arg);
+
+    if (pid > 0)
+    {
+        int wait_status = 0;
+        int result = waitpid(pid, &wait_status, WNOHANG);
+        if (result == 0)
+        {
+            kill(pid, SIGKILL);
+            waitpid(pid, &wait_status, 0);
+        }
+    }
+}
+
 void    clear_memory(char **arr)
 {
     if (!arr)

@@ -36,41 +36,11 @@ class CGI
         child_status    status;
         Client*         client;
 
-        CGI() : client(NULL), pid(-1), status(NOT_RUNNING), env(NULL),
-            arg(NULL), pipe_closed(false), writing(0), reading(0), data_send(0), child_finished(0)
-        {
-            pipe_in[0] = -1;
-            pipe_in[1] = -1;
-            pipe_out[0] = -1;
-            pipe_out[1] = -1;
-        }
-        ~CGI()
-        {
-            std::cout << "cleaning cgi\n";
-            if (pipe_in[0] != -1) close(pipe_in[0]);
-            if (pipe_in[1] != -1) close(pipe_in[1]);
-            if (pipe_out[0] != -1) close(pipe_out[0]);
-            if (pipe_out[1] != -1) close(pipe_out[1]);
-            clear_memory(env);
-            clear_memory(arg);
+        CGI();
+        CGI(const CGI& other);
+        CGI& operator=(const CGI& other);
+        ~CGI();
 
-            int status = 0;
-            int result = waitpid(pid, &status, WNOHANG);
-    
-            if (result == 0)
-            {
-                std::cout << "we killing the child\n";
-                kill(pid, SIGKILL);
-                waitpid(pid, &status, 0);
-            } else if (result == pid)
-            {
-                if (WIFEXITED(status)) {
-                    printf("Child %d exited with code %d\n", pid, WEXITSTATUS(status));
-                } else if (WIFSIGNALED(status)) {
-                    printf("Child %d killed by signal %d\n", pid, WTERMSIG(status));
-                }
-            }
-        }
         void setClient(Client *c)
         {
             client = c;

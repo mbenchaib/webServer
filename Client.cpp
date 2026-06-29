@@ -50,7 +50,9 @@ void Client::generate_error_response(int code)
         Server server = config->findServerByHost(parsed_request.host);
         
         // Retrieve the configured path for this specific error code
-        std::string error_page_path = server.getErrorPage(std::to_string(code));
+        std::ostringstream code_stream;
+        code_stream << code;
+        std::string error_page_path = server.getErrorPage(code_stream.str());
 
         if (!error_page_path.empty())
         {
@@ -94,17 +96,52 @@ void Client::generate_error_response(int code)
 }
 
 
-Client::Client(void) : fd(-1), bytes_send_to_client(0), read_body(0), config(NULL)
+Client::Client(void) : config(NULL), fd(-1), status(READ), read_body(0), bytes_send_to_client(0)
 {
     std::cout << "client have created by default\n";
-    status = READ;
+    cgi.setClient(this);
+    checker.set_client(*this);
 }
 
-Client::Client(int fd, Config& config) : fd(fd), bytes_send_to_client(0), read_body(0), config(&config)
+Client::Client(const Client& other) : config(other.config), cgi(other.cgi),
+    time(other.time), fd(other.fd), status(other.status), raw_buffer(other.raw_buffer),
+    response(other.response), read_body(other.read_body), parsed_request(other.parsed_request),
+    bytes_send_to_client(other.bytes_send_to_client), checker(other.checker)
+{
+    cgi.setClient(this);
+    checker.set_client(*this);
+}
+
+Client::Client(int fd, Config& config) : config(&config), fd(fd), status(READ), read_body(0), bytes_send_to_client(0)
 {
     std::cout << "client have created\n";
-    status = READ;
+    cgi.setClient(this);
+    checker.set_client(*this);
 }
+
+Client& Client::operator=(const Client& other)
+{
+    if (this == &other)
+        return *this;
+
+    config = other.config;
+    cgi = other.cgi;
+    time = other.time;
+    fd = other.fd;
+    status = other.status;
+    raw_buffer = other.raw_buffer;
+    response = other.response;
+    read_body = other.read_body;
+    parsed_request = other.parsed_request;
+    bytes_send_to_client = other.bytes_send_to_client;
+    checker = other.checker;
+
+    cgi.setClient(this);
+    checker.set_client(*this);
+    return *this;
+}
+
+Client::~Client() {}
         
 
 
