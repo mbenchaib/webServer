@@ -151,32 +151,47 @@ int CheckRequest::check_root(void)
 
 void CheckRequest::cgi_or_static(void)
 {
-    size_t pos = root.rfind(".");
-    if (pos != std::string::npos)
+    if (root.empty())
     {
-        std::string ext = root.substr(pos);
-        std::string inter;
-        if (location)
+        client->status = STATIC;
+        return;
+    }
+
+    size_t last_slash = root.find_last_of("/");
+    std::string filename = (last_slash == std::string::npos) ? root : root.substr(last_slash + 1);
+
+    size_t dot_pos = filename.find_last_of(".");
+    
+    if (dot_pos == std::string::npos || dot_pos == filename.size() - 1)
+    {
+        client->status = STATIC;
+        return;
+    }
+
+    std::string ext = filename.substr(dot_pos + 1);
+    std::string handler;
+
+    if (location)
+    {
+        handler = location->getCgiHandler(ext);
+        if (!handler.empty())
         {
-            inter = location->getCgiHandler(ext);
-            if (!inter.empty())
-            {
-                compailer = inter;
-                client->status = CGI_RUNNING;
-                return ;
-            }
-        }
-        if (server)
-        {
-            inter = server->getCgiHandler(ext);
-            if (!inter.empty())
-            {
-                compailer = inter;
-                client->status = CGI_RUNNING;
-                return ;
-            }
+            compailer = handler;
+            client->status = CGI_RUNNING;
+            return;
         }
     }
+    else if (server)
+    {
+        handler = server->getCgiHandler(ext);
+        if (!handler.empty())
+        {
+            compailer = handler;
+            client->status = CGI_RUNNING;
+            return;
+        }
+    }
+
     client->status = STATIC;
 }
 

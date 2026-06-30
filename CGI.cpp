@@ -2,6 +2,29 @@
 #include "CGI.hpp"
 #include <cstring>
 #include <cerrno>
+#include <sstream>
+
+static std::string extract_header_value(const std::string& headers, const std::string& name)
+{
+    std::istringstream stream(headers);
+    std::string line;
+
+    while (std::getline(stream, line))
+    {
+        if (!line.empty() && line[line.size() - 1] == '\r')
+            line.erase(line.size() - 1);
+        if (line.empty())
+            continue;
+        if (line.compare(0, name.size(), name) == 0 && line.size() > name.size() && line[name.size()] == ':')
+        {
+            size_t value_pos = name.size() + 1;
+            while (value_pos < line.size() && (line[value_pos] == ' ' || line[value_pos] == '\t'))
+                value_pos++;
+            return line.substr(value_pos);
+        }
+    }
+    return std::string();
+}
 
 static char **duplicate_memory(char **arr)
 {
@@ -113,7 +136,52 @@ void    clear_memory(char **arr)
 
 void CGI::building_response(void)
 {
-    client->response = cgi_buffer;
+    std::string raw = cgi_buffer;
+    std::string headers;
+    std::string body;
+    int status_code = 200;
+    std::string content_type = "text/html";
+
+    size_t header_end = raw.find("\r\n\r\n");
+    size_t delimiter_len = 4;
+    if (header_end == std::string::npos)
+    {
+        header_end = raw.find("\n\n");
+        delimiter_len = 2;
+    }
+
+    if (header_end != std::string::npos)
+    {
+        headers = raw.substr(0, header_end);
+        body = raw.substr(header_end + delimiter_len);
+    }
+    else
+    {
+        body = raw;
+    }
+
+    if (headers.compare(0, 5, "HTTP/") == 0)
+    {
+        std::istringstream status_stream(headers);
+        std::string http_version;
+        std::string status_text;
+
+        status_stream >> http_version >> status_code;
+    }
+
+    std::string header_content_type = extract_header_value(headers, "Content-Type");
+    if (!header_content_type.empty())
+        content_type = header_content_type;
+
+    std::ostringstream response_stream;
+    response_stream << "HTTP/1.0 " << status_code << " " << get_http_msg(status_code) << "\r\n"
+                    << "Content-Type: " << content_type << "\r\n"
+                    << "Content-Length: " << body.size() << "\r\n"
+                    << "Connection: close\r\n"
+                    << "\r\n"
+                    << body;
+
+    client->response = response_stream.str();
     client->status = WRITE;
 }
 
