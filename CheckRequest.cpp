@@ -10,7 +10,7 @@ static std::string size_to_string(size_t value)
 
 std::string retrun_response(std::string code, std::string path)
 {
-    std::string response = "HTTP/1.1 "+ code + " " + get_http_msg(atoi(code.c_str()))+ "\r\n"+
+    std::string response = "HTTP/1.0 "+ code + " " + get_http_msg(atoi(code.c_str()))+ "\r\n"+
                             "Location: "+ path + "\r\n"
                             +"Content-Length: " + size_to_string(13 + path.size()) + "\r\n"
                             +"Connection: close\r\n"
@@ -151,26 +151,24 @@ int CheckRequest::check_root(void)
 
 void CheckRequest::cgi_or_static(void)
 {
-    if (root.empty())
+    if (!root.size())
     {
         client->status = STATIC;
         return;
     }
 
-    size_t last_slash = root.find_last_of("/");
-    std::string filename = (last_slash == std::string::npos) ? root : root.substr(last_slash + 1);
+    int dot_pos = root.size() - 1;
+    for (; dot_pos > 0 && std::isalpha(root[dot_pos]); dot_pos--){}
 
-    size_t dot_pos = filename.find_last_of(".");
-    
-    if (dot_pos == std::string::npos || dot_pos == filename.size() - 1)
+    if (root[dot_pos] != '.')
     {
         client->status = STATIC;
         return;
     }
-
-    std::string ext = filename.substr(dot_pos + 1);
+    std::string ext = root.substr(dot_pos);
     std::string handler;
 
+    std::cout << "extension = " << ext << '\n';
     if (location)
     {
         handler = location->getCgiHandler(ext);

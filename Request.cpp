@@ -97,8 +97,6 @@ void    Request::check_body_len(void)
         if (cl.size() > 10) { error_code = 413, valid = false; return; }
         
         body_len = strtoul(cl.c_str(), NULL, 10);
-        
-        // if (body_len > INT_MAX)  { error_code = 413, valid = false; return; }
     }
     else if (method == "POST")
     {

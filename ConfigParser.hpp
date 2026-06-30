@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <fstream>
 #include <vector>
+#include <stdlib.h>
 
 struct Directive
 {

@@ -268,7 +268,7 @@ void CGI::create_envs()
     std::vector<std::string> envs;
 
     envs.push_back("GATEWAY_INTERFACE=CGI/1.1");
-    envs.push_back("SERVER_PROTOCOL=HTTP/1.1");
+    envs.push_back("SERVER_PROTOCOL=HTTP/1.0");
     envs.push_back("SERVER_SOFTWARE=webserv/1.0");
     envs.push_back("SERVER_NAME=" + client->parsed_request.host);
     envs.push_back("REQUEST_METHOD=" + client->parsed_request.method);

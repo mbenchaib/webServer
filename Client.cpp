@@ -42,21 +42,15 @@ void Client::generate_error_response(int code)
     std::string body;
     bool custom_page_loaded = false;
 
-    // 1. Attempt to resolve custom error page from configuration
     if (config != NULL)
     {
-        // Find the server block matching the Host header.
-        // If the request failed before parsing the Host, this should safely return a default server.
         Server server = config->findServerByHost(parsed_request.host);
-        
-        // Retrieve the configured path for this specific error code
         std::ostringstream code_stream;
         code_stream << code;
         std::string error_page_path = server.getErrorPage(code_stream.str());
 
         if (!error_page_path.empty())
         {
-            // Attempt to open and read the file
             std::ifstream file(error_page_path.c_str(), std::ios::in | std::ios::binary);
             if (file.is_open())
             {
@@ -74,7 +68,6 @@ void Client::generate_error_response(int code)
         }
     }
 
-    // 2. Fallback to hardcoded default HTML if no custom page was loaded
     if (!custom_page_loaded)
     {
         std::ostringstream html;
@@ -84,9 +77,8 @@ void Client::generate_error_response(int code)
         body = html.str();
     }
 
-    // 3. Assemble the final HTTP response
     std::ostringstream response_stream;
-    response_stream << "HTTP/1.1 " << code << " " << message << "\r\n"
+    response_stream << "HTTP/1.0 " << code << " " << message << "\r\n"
                     << "Content-Type: text/html\r\n"
                     << "Content-Length: " << body.size() << "\r\n"
                     << "Connection: close\r\n\r\n"
@@ -234,9 +226,6 @@ void Client::reading_request(void)
             else if (parsed_request.chunk_state == CHUNK_ERROR)
                 { generate_error_response(400); status = WRITE; }
             parsed_request.body_len = parsed_request.body.size();
-            
-            // if (parsed_request.body.size() > INT_MAX)
-            //     { generate_error_response(400); status = WRITE; }
         }
         else
         {
@@ -258,6 +247,8 @@ void Client::sending_response(void)
 {
     if (status != WRITE) return;
 
+    std::cout << "------ Sending response to client ---\n";
+    std::cout << response << "\n------ End of response ---\n";
     size_t bytes_to_send = response.size() - bytes_send_to_client;
     
     ssize_t bytes_sent = send(fd, response.c_str() + bytes_send_to_client, bytes_to_send, 0);

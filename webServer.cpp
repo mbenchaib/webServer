@@ -26,6 +26,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <iostream>
+#include <algorithm>
 
                             // =======================
                             //         Helpers
@@ -218,7 +219,7 @@ void    WebServer::HandleClient(struct pollfd& fd)
     // hnaya cancoun salit men building response ou cansardo n client
     if ((clian.status == WRITE || timeout_check(clian)) && fd.revents & POLLOUT)
     {
-        clian.parsed_request.print();
+        // clian.parsed_request.print();
         clian.sending_response();
     }
     // hna mli kansali client canmsho
