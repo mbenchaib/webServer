@@ -6,7 +6,7 @@
 /*   By: sael-kha <sael-kha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/29 10:37:14 by sael-kha         ###   ########.fr       */
+/*   Updated: 2026/07/01 18:45:07 by sael-kha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -189,32 +189,49 @@ int timeout_check(Client& client)
     }
     return 0;
 }
+
+Client* WebServer::bring_client(struct pollfd& fd)
+{
+    std::map<int, Client>::iterator it =  clients.find(fd.fd);
+    if (it != clients.end())
+        return &clients[fd.fd];
+    for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++)
+    {
+        if (it->second.cgi.pipe_in[1] == fd.fd)
+            return &it->second;
+        if (it->second.cgi.pipe_out[0] == fd.fd)
+            return &it->second;
+    }
+    return NULL;
+}
+
 void    WebServer::HandleClient(struct pollfd& fd)
 {
-    Client& clian = clients[fd.fd];
+    Client& clian = *bring_client(fd);
+    // clian.parsed_request.print();
     // hna can9ra men client request ou nparsih
     if (clian.status == READ && fd.revents & POLLIN)
     {
-        std::cout << "server read now\n";
+        // std::cout << "server read now\n";
         clian.reading_request();
     }
     // hnakanvalidi wach request huwahadak awla
     if (clian.status == VALIDATION)
     {
-        std::cout << "validating client request\n";
+        // std::cout << "validating client request\n";
         clian.checker.validate();
     }
     // hnaya rashid ybuidy static response dyalo
-    if (clian.status == STATIC && fd.revents & POLLOUT)
+    if (clian.status == STATIC)
     {
-        std::cout << "builting STATIC response now\n";
+        // std::cout << "builting STATIC response now\n";
         Response(clian).build();
     }
     // hnaya cankhadem cgi ou canbuidy response
-    if (clian.status == CGI_RUNNING && fd.revents & POLLOUT)
+    if (clian.status == CGI_RUNNING)
     {
         // std::cout << "builting CGI response now\n";
-        clian.cgi.starting_cgi();
+        clian.cgi.starting_cgi(pfds, fd);
     }
     // hnaya cancoun salit men building response ou cansardo n client
     if ((clian.status == WRITE || timeout_check(clian)) && fd.revents & POLLOUT)
@@ -225,7 +242,7 @@ void    WebServer::HandleClient(struct pollfd& fd)
     // hna mli kansali client canmsho
     if (clian.status == CLOSE)
     {
-        std::cout << "server close client\n";
+        // std::cout << "server close client\n";
 
         close(fd.fd);
 
@@ -244,6 +261,18 @@ void    WebServer::HandleClient(struct pollfd& fd)
 }
 
 // ===== Initialize server and process socket events using poll() =====
+
+// void    set_pipe(std::map<int, Client>& clients, int fd)
+// {
+//     std::map<int, Client>::iterator it = clients.begin();
+//     for (;it != clients.begin();it++)
+//     {
+//         if (it->second.cgi.pipe_in[1] == fd)
+//             it->second.cgi.pipe_in[1] = -1;
+//         if (it->second.cgi.pipe_out[0] == fd)
+//             it->second.cgi.pipe_out[0] = -1;
+//     }
+// }
 
 void WebServer::run()
 {
@@ -274,15 +303,16 @@ void WebServer::run()
             
             if (pfds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
             {
-                std::cout << "client with "<<pfds[i].fd << " gone\n";
-                std::cout << strerror(errno) << '\n';
+                // std::cout << "client with "<<pfds[i].fd << " gone\n";
+                // std::cout << strerror(errno) << '\n';
                 int fd = pfds[i].fd;
                 
                 close(fd);
                 pfds.erase(pfds.begin() + i);
-                if (!isListening)
+                bool    isPipe = (clients.find(fd) == clients.end());
+                if (!isPipe)
                     clients.erase(fd);
-                else
+                else if (isListening)
                 {
                     std::vector<int>::iterator it = std::find(server_sd.begin(), server_sd.end(), fd); 
                     server_sd.erase(it);
@@ -290,6 +320,7 @@ void WebServer::run()
                     if (server_sd.empty())
                         throw NoListenSocketException("All listening sockets have failed; server shutting down");
                 }
+                // set_pipe(clients, fd);
                 i--;
                 continue ;
             }

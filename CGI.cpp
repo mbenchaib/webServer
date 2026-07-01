@@ -3,6 +3,8 @@
 #include <cstring>
 #include <cerrno>
 #include <sstream>
+#include <poll.h>
+#include <algorithm>
 
 static std::string extract_header_value(const std::string& headers, const std::string& name)
 {
@@ -110,13 +112,8 @@ CGI::~CGI()
 
     if (pid > 0)
     {
-        int wait_status = 0;
-        int result = waitpid(pid, &wait_status, WNOHANG);
-        if (result == 0)
-        {
-            kill(pid, SIGKILL);
-            waitpid(pid, &wait_status, 0);
-        }
+        kill(SIGKILL, pid);
+        // std::cout << "kill that mf\n";
     }
 }
 
@@ -194,13 +191,13 @@ int CGI::write_to_child()
     while((bytes = write(pipe_in[1], client->parsed_request.body.c_str() + data_send, client->parsed_request.body.size() - data_send)) > 0)
         data_send += bytes;
 
-    if (bytes == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
-        return (std::cout << strerror(errno) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
+    if (bytes == -1)
+        return 0;
+
     if (data_send == client->parsed_request.body.size())
     {
         writing = 1;
         close(pipe_in[1]);
-        pipe_in[1] = -1;
     }
     return 0;
 }
@@ -238,27 +235,32 @@ int CGI::reading_from_child()
     ssize_t bytes = 0;
     while ((bytes = read(pipe_out[0], buffer, sizeof(buffer))) > 0)
         cgi_buffer.append(buffer, bytes);
-    if (bytes == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
-        return (std::cout << strerror(errno) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
+    if (bytes == -1)
+        return 0;
     if (bytes == 0)
     {
         reading = 1;
-        pipe_closed = true;
     }
     return 0;
 }
 
-void CGI::check_cgi()
+void CGI::check_cgi(struct pollfd& p)
 {
-    if (!writing)
+    if (!writing && (p.revents | POLLIN))
+    {
         if (write_to_child())
             return ;
+        // std::cout << "writing\n";
+    }
     if (!child_finished)
         if (check_child())
             return ;
-    if (!reading)
+    if (!reading && (p.revents | POLLOUT))
+    {
         if (reading_from_child())
             return ;
+        // std::cout << "reading\n";
+    }
     if (child_finished && reading)
         status = FINISHED;
 }
@@ -338,17 +340,16 @@ int CGI::run_cgi()
         }
         if (execve(arg[0], arg, env) == -1)
         {
-            std::cerr << strerror(errno) << '\n';
-            _exit(1);
+            // std::cerr << strerror(errno) << '\n';
+            exit(1);
         }
     }else
     {
-        std::cout << "from parent\n";
+        // std::cout << "from parent\n";
         close(pipe_in[0]);
         close(pipe_out[1]);
         pipe_in[0] = -1;
         pipe_out[1] = -1;
-        write_to_child();
         status = RUNNING;
     }
     return 1;
@@ -393,10 +394,13 @@ int CGI::pipe_init()
 {
     if (pipe(pipe_in) == -1)
         return (std::cerr << "pipe: " + std::string(strerror(errno)) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
-    if (pipe(pipe_out) == -1)
-        return (std::cerr << "pipe: " + std::string(strerror(errno)) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
+    
     if (set_nonblocking(pipe_in[1]) == -1)
         return (std::cerr << "pipe: " + std::string(strerror(errno)) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
+    
+    if (pipe(pipe_out) == -1)
+        return (std::cerr << "pipe: " + std::string(strerror(errno)) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
+
     if (set_nonblocking(pipe_out[0]) == -1)
         return (std::cerr << "pipe: " + std::string(strerror(errno)) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
     return 1;
@@ -415,7 +419,30 @@ void    CGI::create_args()
     arg[2] = NULL;
 }
 
-void    CGI::starting_cgi(void)
+void    CGI::set_cgi_pfds(std::vector<struct pollfd>&  pfds)
+{
+    // std::cout << "seting pipes in poll\n";
+    if (pipe_in[1] != -1)
+    {
+        // std::cout << "pipe_in\n";
+        struct pollfd fd_in;
+        fd_in.fd = pipe_in[1];
+        fd_in.events = POLLOUT;
+        pfds.push_back(fd_in);
+        // std::cout << "seting pipe "<<pfds.back().fd << " to pfds" << '\n';
+    }
+    if (pipe_out[0] != -1)
+    {
+        // std::cout << "pipe_out\n";
+        struct pollfd fd_out;
+        fd_out.fd = pipe_out[0];
+        fd_out.events = POLLIN;
+        pfds.push_back(fd_out);
+        // std::cout << "seting pipe "<<pfds.back().fd << " to pfds" << '\n';
+    }
+}
+
+void    CGI::starting_cgi(std::vector<struct pollfd>&  pfds, struct pollfd& p)
 {
     if (status == NOT_RUNNING)
     {
@@ -428,9 +455,14 @@ void    CGI::starting_cgi(void)
         create_args();
         if (run_cgi() == -1)
             return ;
+        set_cgi_pfds(pfds);
+        return ;
     }
-    if(status == RUNNING || pipe_closed == false)
-        check_cgi();
+    if(status == RUNNING)
+        check_cgi(p);
     if (status == FINISHED)
+    {
+        // std::cout << "\ncgi FINISHED\n";
         building_response();
+    }
 }

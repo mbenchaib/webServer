@@ -47,7 +47,7 @@ class CGI
         }
 
         int     run_cgi(void);
-        void    check_cgi(void);
+        void    check_cgi(struct pollfd& p);
         
         void    create_envs(void);
         void    create_args(void);
@@ -58,9 +58,11 @@ class CGI
         int     reading_from_child(void);
         int     checking_permission(void);
 
-        void    starting_cgi(void);
+        void    starting_cgi(std::vector<struct pollfd>&  pfds, struct pollfd& p);
 
         void    building_response(void);
+
+        void    set_cgi_pfds(std::vector<struct pollfd>&  pfds);
 };
 
 #endif

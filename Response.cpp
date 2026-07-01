@@ -199,15 +199,31 @@ void Response::serve_directory(void)
 
 void Response::handle_get(void)
 {
-    if (client->checker.is_a_dir)
+    struct stat st;
+    bool is_dir = false;
+
+    if (stat(client->checker.root.c_str(), &st) != 0)
+        return (client->generate_error_response(404));
+
+    if (S_ISDIR(st.st_mode))
+        is_dir = true;
+    else if (!S_ISREG(st.st_mode))
+        return (client->generate_error_response(403));
+    else if (access(client->checker.root.c_str(), R_OK) != 0)
+        return (client->generate_error_response(403));
+
+    if (is_dir)
         serve_directory();
     else
         serve_file(client->checker.root);
 }
 
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 void Response::handle_post(void)
 {
-    // upload mahyya allowed ghir ila location 3ndha upload_path
     std::string upload_dir = get_upload_path();
     if (upload_dir.empty())
     {
@@ -215,14 +231,33 @@ void Response::handle_post(void)
         return;
     }
 
-    // smiya dyal file men l URI
-    std::string path = client->parsed_request.path;
+    struct stat st;
+    if (stat(upload_dir.c_str(), &st) != 0)
+    {
+        client->generate_error_response(500);
+        return;
+    }
+
+    if (!S_ISDIR(st.st_mode))
+    {
+        client->generate_error_response(500);
+        return;
+    }
+
+    if (access(upload_dir.c_str(), W_OK) != 0)
+    {
+        client->generate_error_response(403);
+        return;
+    }
+
     std::string filename;
-    size_t      pos = path.find_last_of('/');
-    if (pos != std::string::npos)
-        filename = path.substr(pos + 1);
+    std::string uri = client->parsed_request.path;
+    size_t pos = uri.find_last_of('/');
+
+    if (pos == std::string::npos)
+        filename = uri;
     else
-        filename = path;
+        filename = uri.substr(pos + 1);
 
     if (filename.empty())
     {
@@ -230,23 +265,47 @@ void Response::handle_post(void)
         return;
     }
 
-    std::string full = upload_dir;
-    if (!full.empty() && full[full.size() - 1] != '/')
-        full += "/";
-    full += filename;
+    std::string full_path = upload_dir;
+    if (full_path[full_path.size() - 1] != '/')
+        full_path += "/";
+    full_path += filename;
 
-    std::ofstream out(full.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-    if (!out.is_open())
+    int fd = open(full_path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (fd < 0)
     {
-        client->generate_error_response(500);
+        if (errno == EACCES)
+            client->generate_error_response(403);
+        else
+            client->generate_error_response(500);
         return;
     }
-    out.write(client->parsed_request.body.data(), client->parsed_request.body.size());
-    out.close();
 
-    // file jdid tcreya -> 201 Created
-    client->response = build_response(201, "text/html",
-        "<html>\r\n<body>\r\n<h1>201 Created</h1>\r\n</body>\r\n</html>");
+    const char *data = client->parsed_request.body.data();
+    size_t total = client->parsed_request.body.size();
+    size_t written = 0;
+
+    while (written < total)
+    {
+        ssize_t n = write(fd, data + written, total - written);
+        if (n <= 0)
+        {
+            close(fd);
+            client->generate_error_response(500);
+            return;
+        }
+        written += n;
+    }
+
+    close(fd);
+
+    client->response = build_response(
+        201,
+        "text/html",
+        "<html>\r\n"
+        "<body>\r\n"
+        "<h1>201 Created</h1>\r\n"
+        "</body>\r\n"
+        "</html>");
 }
 
 void Response::handle_delete(void)
