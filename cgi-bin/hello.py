@@ -1,0 +1,1 @@
+print("HTTP/2 404 Not Found\r\nContent-Type: test\r\nContent-Length: 24\r\n\r\n<h1>Hello my niggerdvdv</h1>")

@@ -3,15 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   webServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sael-kha <sael-kha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/08 16:52:14 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/07/01 18:45:07 by sael-kha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webServer.hpp"
 #include "Exceptions.hpp"
+#include "Response.hpp"
 #include <cerrno>
 #include <cstddef>
 #include <cstring>
@@ -24,9 +25,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <iostream>
-
+#include <algorithm>
 
                             // =======================
                             //         Helpers
@@ -137,33 +137,142 @@ void WebServer::addListenFds()
 
 void WebServer::acceptClient(int serv_sd)
 {
-    int fd_client;
-    if ((fd_client = accept(serv_sd, NULL, NULL)) == -1)
+    while (true)
     {
-        std::cerr << "accept failed on socket "
-                  << serv_sd
-                  << ": "
-                  << strerror(errno)
-                  << "\n";
-        return ;
+        int fd_client = accept(serv_sd, NULL, NULL);
+
+        if (fd_client == -1)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                break;
+
+            std::cerr << "accept failed on socket "
+                      << serv_sd
+                      << ": "
+                      << strerror(errno)
+                      << '\n';
+            break;
+        }
+
+        if (fcntl(fd_client, F_SETFL, O_NONBLOCK) == -1)
+        {
+            close(fd_client);
+            continue;
+        }
+
+        struct pollfd pfd;
+
+        pfd.fd = fd_client;
+        pfd.events = (POLLIN | POLLOUT);
+        pfd.revents = 0;
+
+        pfds.push_back(pfd);
+
+        clients[fd_client] = Client(fd_client, config);
+        
+        clients[fd_client].cgi.setClient(&clients[fd_client]);
+        clients[fd_client].checker.set_client(clients[fd_client]);
+        clients[fd_client].time = time(NULL);
     }
-    
-    if (fcntl(fd_client, F_SETFL, O_NONBLOCK) == -1)
+}
+
+int timeout_check(Client& client)
+{
+    if ((time(NULL) - client.time) > 200)
     {
-        close(fd_client);
+        if (client.cgi.pid != -1)
+            client.generate_error_response(504);
+        else
+            client.generate_error_response(408);
+        client.status = WRITE;
+        return 1;
+    }
+    return 0;
+}
+
+Client* WebServer::bring_client(struct pollfd& fd)
+{
+    std::map<int, Client>::iterator it =  clients.find(fd.fd);
+    if (it != clients.end())
+        return &clients[fd.fd];
+    for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++)
+    {
+        if (it->second.cgi.pipe_in[1] == fd.fd)
+            return &it->second;
+        if (it->second.cgi.pipe_out[0] == fd.fd)
+            return &it->second;
+    }
+    return NULL;
+}
+
+void    WebServer::HandleClient(struct pollfd& fd)
+{
+    Client& clian = *bring_client(fd);
+    // clian.parsed_request.print();
+    // hna can9ra men client request ou nparsih
+    if (clian.status == READ && fd.revents & POLLIN)
+    {
+        // std::cout << "server read now\n";
+        clian.reading_request();
+    }
+    // hnakanvalidi wach request huwahadak awla
+    if (clian.status == VALIDATION)
+    {
+        // std::cout << "validating client request\n";
+        clian.checker.validate();
+    }
+    // hnaya rashid ybuidy static response dyalo
+    if (clian.status == STATIC)
+    {
+        // std::cout << "builting STATIC response now\n";
+        Response(clian).build();
+    }
+    // hnaya cankhadem cgi ou canbuidy response
+    if (clian.status == CGI_RUNNING)
+    {
+        // std::cout << "builting CGI response now\n";
+        clian.cgi.starting_cgi(pfds, fd);
+    }
+    // hnaya cancoun salit men building response ou cansardo n client
+    if ((clian.status == WRITE || timeout_check(clian)) && fd.revents & POLLOUT)
+    {
+        // clian.parsed_request.print();
+        clian.sending_response();
+    }
+    // hna mli kansali client canmsho
+    if (clian.status == CLOSE)
+    {
+        // std::cout << "server close client\n";
+
+        close(fd.fd);
+
+        clients.erase(fd.fd);
+
+        for (std::vector<pollfd>::iterator it = pfds.begin(); it != pfds.end(); ++it)
+        {
+            if (it->fd == fd.fd)
+            {
+                pfds.erase(it);
+                break;
+            }
+        }
         return;
     }
-    
-    struct pollfd   pfd;
-    
-    pfd.fd = fd_client;
-    pfd.events = POLLIN;
-    pfds.push_back(pfd);
-    
-    //clients[fd_client] = Client();
 }
 
 // ===== Initialize server and process socket events using poll() =====
+
+// void    set_pipe(std::map<int, Client>& clients, int fd)
+// {
+//     std::map<int, Client>::iterator it = clients.begin();
+//     for (;it != clients.begin();it++)
+//     {
+//         if (it->second.cgi.pipe_in[1] == fd)
+//             it->second.cgi.pipe_in[1] = -1;
+//         if (it->second.cgi.pipe_out[0] == fd)
+//             it->second.cgi.pipe_out[0] = -1;
+//     }
+// }
 
 void WebServer::run()
 {
@@ -186,24 +295,39 @@ void WebServer::run()
         }
 
         for (size_t i = 0; i < pfds.size(); i++)
-        {
+        {            
             if (pfds[i].revents == 0)
                 continue;
             
+            bool isListening = std::find(server_sd.begin(), server_sd.end(), pfds[i].fd) != server_sd.end();
+            
             if (pfds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
             {
-                close(pfds[i].fd);
+                // std::cout << "client with "<<pfds[i].fd << " gone\n";
+                // std::cout << strerror(errno) << '\n';
+                int fd = pfds[i].fd;
+                
+                close(fd);
                 pfds.erase(pfds.begin() + i);
-                i--;
-                continue;
-            }
-            
-            bool isListening = std::find(server_sd.begin(), server_sd.end(), pfds[i].fd) != server_sd.end();
+                bool    isPipe = (clients.find(fd) == clients.end());
+                if (!isPipe)
+                    clients.erase(fd);
+                else if (isListening)
+                {
+                    std::vector<int>::iterator it = std::find(server_sd.begin(), server_sd.end(), fd); 
+                    server_sd.erase(it);
 
+                    if (server_sd.empty())
+                        throw NoListenSocketException("All listening sockets have failed; server shutting down");
+                }
+                // set_pipe(clients, fd);
+                i--;
+                continue ;
+            }
             if (isListening && (pfds[i].revents & POLLIN))
                 acceptClient(pfds[i].fd);
             else if (!isListening)
-                //HandleClient()
+                HandleClient(pfds[i]);
         }
     }
 }

@@ -6,11 +6,16 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 22:06:41 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/05/16 17:55:42 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/29 21:44:29 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#ifndef CONFIGRULES_HPP
+#define CONFIGRULES_HPP
+
 #include <map>
+#include <string>
+#include <vector>
 #define UNSPECIFIED_MAX_VALUES 10
 
 enum ValueType
@@ -42,3 +47,5 @@ struct DirectiveRule
 
 void initRules(std::map<std::string, DirectiveRule>& serverRules, std::map<std::string, DirectiveRule>& locationRules);
 bool validateValueType(ValueType type, const std::vector<std::string> values);
+
+#endif

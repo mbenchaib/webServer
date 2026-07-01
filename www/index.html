@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Raw Upload</title>
+</head>
+<body>
+
+<input type="file" id="file">
+<button onclick="upload()">Upload</button>
+
+<script>
+async function upload() {
+    const input = document.getElementById("file");
+
+    if (input.files.length === 0) {
+        alert("Select a file");
+        return;
+    }
+
+    const file = input.files[0];
+
+    const response = await fetch(
+        "http://localhost:8080/images/" + encodeURIComponent(file.name),
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": file.type || "application/octet-stream"
+            },
+            body: file
+        }
+    );
+
+    alert(await response.text());
+}
+</script>
+
+</body>
+</html>

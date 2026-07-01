@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 12:08:04 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/06 16:21:25 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/06/26 17:39:39 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -221,8 +221,8 @@ static void validateDirectives(const std::vector<Directive>& directives, const s
     while (iter != end)
     {
         iter_map = DirRules.find(iter->name);
-        if (!(iter_map != DirRules.end() && iter->values.size() >= iter_map->second.minValues
-                                     && iter->values.size() <= iter_map->second.maxValues))
+        if (!(iter_map != DirRules.end() && iter->values.size() >= static_cast<size_t>(iter_map->second.minValues)
+                                     && iter->values.size() <= static_cast<size_t>(iter_map->second.maxValues)))
             throw ConfigValidationError("Error: Unknown directive or invalid number of directive values");
 
         if (hasDuplicate(iter, end, iter_map->second.allowDuplicate))
