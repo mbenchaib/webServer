@@ -5,6 +5,8 @@
 #include <sstream>
 #include <poll.h>
 #include <algorithm>
+#include <sys/signal.h>
+#include <sys/wait.h>
 
 static std::string extract_header_value(const std::string& headers, const std::string& name)
 {
@@ -112,8 +114,8 @@ CGI::~CGI()
 
     if (pid > 0)
     {
-        kill(SIGKILL, pid);
-        // std::cout << "kill that mf\n";
+        kill(pid, SIGKILL);
+        waitpid(pid, NULL, WNOHANG);
     }
 }
 
@@ -446,7 +448,6 @@ void    CGI::starting_cgi(std::vector<struct pollfd>&  pfds, struct pollfd& p)
 {
     if (status == NOT_RUNNING)
     {
-        signal(SIGPIPE, SIG_IGN);
         if(checking_permission() == -1)
             return ;
         if(pipe_init() == -1)
