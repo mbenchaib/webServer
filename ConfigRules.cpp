@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigRules.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sael-kha <sael-kha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/29 22:06:50 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/06/29 10:55:12 by sael-kha         ###   ########.fr       */
+/*   Updated: 2026/07/02 15:45:50 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -284,6 +284,7 @@ bool validateValueType(ValueType type, const std::vector<std::string> values)
 void initRules(std::map<std::string, DirectiveRule>& serverRules, std::map<std::string, DirectiveRule>& locationRules)
 {
     serverRules["listen"]        =   DirectiveRule(1, 1, TYPE_IP_PORT, false, true);
+    serverRules["methods"]       =   DirectiveRule(1, 3, TYPE_METHOD, false, false);
     serverRules["host"]          =   DirectiveRule(1, 1, TYPE_HOST, false, false);
     serverRules["root"]          =   DirectiveRule(1, 1, TYPE_PATH, false, false);
     serverRules["index"]         =   DirectiveRule(1, UNSPECIFIED_MAX_VALUES, TYPE_FILENAME, false, false);

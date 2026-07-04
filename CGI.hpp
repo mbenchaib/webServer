@@ -2,25 +2,30 @@
 #define CGI_HPP
 
 #include <vector>
-#include <signal.h>
+#include <string>
+#include <sys/poll.h>
+#include <sys/stat.h>
 
 class Client;
 
-void    clear_memory(char **arr);
+void clear_memory(char **arr);
 
 typedef enum child_status
 {
     NOT_RUNNING,
     RUNNING,
     FINISHED
-}   child_status;
+} child_status;
 
 class CGI
 {
     public:
-        int             pipe_in[2];
-        int             pipe_out[2];
+        int             file_in;
+        int             file_out;
         int             pid;
+
+        std::string     dir;
+        std::string     script;
 
         char            **env;
         char            **arg;
@@ -34,35 +39,32 @@ class CGI
         bool            pipe_closed;
         std::string     cgi_buffer;
         child_status    status;
-        Client*         client;
+        Client* client;
+
+        std::string     in_path;
+        std::string     out_path;
 
         CGI();
         CGI(const CGI& other);
         CGI& operator=(const CGI& other);
         ~CGI();
 
-        void setClient(Client *c)
-        {
-            client = c;
-        }
+        void setClient(Client *c);
 
-        int     run_cgi(void);
+        int     run_cgi_process(void);
         void    check_cgi(struct pollfd& p);
         
         void    create_envs(void);
         void    create_args(void);
 
-        int     pipe_init(void);
+        int     file_init(void);
         int     check_child(void);
         int     write_to_child(void);
         int     reading_from_child(void);
         int     checking_permission(void);
 
-        void    starting_cgi(std::vector<struct pollfd>&  pfds, struct pollfd& p);
-
+        void    starting_cgi(std::vector<struct pollfd>& pfds, struct pollfd& p);
         void    building_response(void);
-
-        void    set_cgi_pfds(std::vector<struct pollfd>&  pfds);
 };
 
 #endif

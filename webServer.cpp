@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sael-kha <sael-kha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/07/01 18:45:07 by sael-kha         ###   ########.fr       */
+/*   Updated: 2026/07/02 15:46:43 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,6 +114,8 @@ void WebServer::setupSocket()
         if (bind(sd, res->ai_addr, res->ai_addrlen) == -1)
             throw SocketSetupError(strerror(errno));
 
+        freeaddrinfo(res);
+
         if (listen(sd, BACKLOG) == -1)
             throw SocketSetupError(strerror(errno));
     }
@@ -197,9 +199,9 @@ Client* WebServer::bring_client(struct pollfd& fd)
         return &clients[fd.fd];
     for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++)
     {
-        if (it->second.cgi.pipe_in[1] == fd.fd)
+        if (it->second.cgi.file_in == fd.fd)
             return &it->second;
-        if (it->second.cgi.pipe_out[0] == fd.fd)
+        if (it->second.cgi.file_out == fd.fd)
             return &it->second;
     }
     return NULL;
@@ -207,7 +209,7 @@ Client* WebServer::bring_client(struct pollfd& fd)
 
 void    WebServer::HandleClient(struct pollfd& fd)
 {
-    Client& clian = *bring_client(fd);
+    Client& clian = clients[fd.fd];
     // clian.parsed_request.print();
     // hna can9ra men client request ou nparsih
     if (clian.status == READ && fd.revents & POLLIN)
@@ -276,6 +278,8 @@ void    WebServer::HandleClient(struct pollfd& fd)
 
 void WebServer::run()
 {
+    signal(SIGPIPE, SIG_IGN);
+    
     setupSocket();
     
     if (server_sd.empty())

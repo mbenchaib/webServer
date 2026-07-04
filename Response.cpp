@@ -251,7 +251,9 @@ void Response::handle_post(void)
     }
 
     std::string filename;
+    std::cout << "Here\n";
     std::string uri = client->parsed_request.path;
+    std::cout << uri << std::endl;
     size_t pos = uri.find_last_of('/');
 
     if (pos == std::string::npos)

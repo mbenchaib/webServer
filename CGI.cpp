@@ -1,10 +1,16 @@
 #include "Client.hpp"
 #include "CGI.hpp"
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 #include <cstring>
-#include <cerrno>
+#include <iostream>
 #include <sstream>
-#include <poll.h>
-#include <algorithm>
+
+void CGI::setClient(Client *c)
+{
+    client = c;
+}
 
 static std::string extract_header_value(const std::string& headers, const std::string& name)
 {
@@ -47,25 +53,20 @@ static char **duplicate_memory(char **arr)
     return copy;
 }
 
-CGI::CGI() : pid(-1), env(NULL), arg(NULL), writing(0), reading(0),
-    child_finished(0), data_send(0), pipe_closed(false), cgi_buffer(),
-    status(NOT_RUNNING), client(NULL)
+CGI::CGI() : file_in(-1), file_out(-1), pid(-1), env(NULL), arg(NULL), 
+             writing(0), reading(0), child_finished(0), data_send(0), 
+             pipe_closed(false), cgi_buffer(), status(NOT_RUNNING), client(NULL),
+             in_path(""), out_path("")
 {
-    pipe_in[0] = -1;
-    pipe_in[1] = -1;
-    pipe_out[0] = -1;
-    pipe_out[1] = -1;
 }
 
-CGI::CGI(const CGI& other) : pid(-1), env(NULL), arg(NULL), writing(other.writing),
-    reading(other.reading), child_finished(other.child_finished), data_send(other.data_send),
-    pipe_closed(other.pipe_closed), cgi_buffer(other.cgi_buffer), status(other.status),
-    client(other.client)
+CGI::CGI(const CGI& other) : file_in(-1), file_out(-1), pid(-1), env(NULL), arg(NULL),
+                             writing(other.writing), reading(other.reading), 
+                             child_finished(other.child_finished), data_send(other.data_send),
+                             pipe_closed(other.pipe_closed), cgi_buffer(other.cgi_buffer), 
+                             status(other.status), client(other.client),
+                             in_path(other.in_path), out_path(other.out_path)
 {
-    pipe_in[0] = -1;
-    pipe_in[1] = -1;
-    pipe_out[0] = -1;
-    pipe_out[1] = -1;
     env = duplicate_memory(other.env);
     arg = duplicate_memory(other.arg);
 }
@@ -75,18 +76,18 @@ CGI& CGI::operator=(const CGI& other)
     if (this == &other)
         return *this;
 
-    if (pipe_in[0] != -1) close(pipe_in[0]);
-    if (pipe_in[1] != -1) close(pipe_in[1]);
-    if (pipe_out[0] != -1) close(pipe_out[0]);
-    if (pipe_out[1] != -1) close(pipe_out[1]);
     clear_memory(env);
     clear_memory(arg);
 
-    pipe_in[0] = -1;
-    pipe_in[1] = -1;
-    pipe_out[0] = -1;
-    pipe_out[1] = -1;
+    if (file_in >= 0) close(file_in);
+    if (file_out >= 0) close(file_out);
+
+    if (!in_path.empty()) unlink(in_path.c_str());
+    if (!out_path.empty()) unlink(out_path.c_str());
+
     pid = -1;
+    file_in = -1;
+    file_out = -1;
 
     env = duplicate_memory(other.env);
     arg = duplicate_memory(other.arg);
@@ -98,32 +99,36 @@ CGI& CGI::operator=(const CGI& other)
     cgi_buffer = other.cgi_buffer;
     status = other.status;
     client = other.client;
+    in_path = other.in_path;
+    out_path = other.out_path;
     return *this;
 }
 
 CGI::~CGI()
 {
-    if (pipe_in[0] != -1) close(pipe_in[0]);
-    if (pipe_in[1] != -1) close(pipe_in[1]);
-    if (pipe_out[0] != -1) close(pipe_out[0]);
-    if (pipe_out[1] != -1) close(pipe_out[1]);
     clear_memory(env);
     clear_memory(arg);
 
+    if (file_in >= 0) close(file_in);
+    if (file_out >= 0) close(file_out);
+
+    if (!in_path.empty()) unlink(in_path.c_str());
+    if (!out_path.empty()) unlink(out_path.c_str());
+
     if (pid > 0)
     {
-        kill(SIGKILL, pid);
-        // std::cout << "kill that mf\n";
+        kill(pid, SIGKILL);
+        waitpid(pid, NULL, 0);
     }
 }
 
-void    clear_memory(char **arr)
+void clear_memory(char **arr)
 {
     if (!arr)
-        return ;
+        return;
     
     int i = 0;
-    while(arr[i])
+    while (arr[i])
     {
         delete[] arr[i];
         i++;
@@ -161,8 +166,6 @@ void CGI::building_response(void)
     {
         std::istringstream status_stream(headers);
         std::string http_version;
-        std::string status_text;
-
         status_stream >> http_version >> status_code;
     }
 
@@ -182,34 +185,83 @@ void CGI::building_response(void)
     client->status = WRITE;
 }
 
+int CGI::file_init()
+{
+    std::ostringstream ss_in, ss_out;
+    ss_in << "/tmp/webserv_cgi_in_" << getpid() << "_" << reinterpret_cast<intptr_t>(this);
+    ss_out << "/tmp/webserv_cgi_out_" << getpid() << "_" << reinterpret_cast<intptr_t>(this);
+    
+    in_path = ss_in.str();
+    out_path = ss_out.str();
+
+    file_in = open(in_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+    if (file_in == -1)
+    {
+        std::cerr << "Failed to create input file: " << in_path << '\n';
+        client->generate_error_response(500);
+        client->status = WRITE;
+        return -1;
+    }
+
+    file_out = open(out_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+    if (file_out == -1)
+    {
+        std::cerr << "Failed to create output file: " << out_path << '\n';
+        close(file_in);
+        file_in = -1;
+        unlink(in_path.c_str());
+        client->generate_error_response(500);
+        client->status = WRITE;
+        return -1;
+    }
+    return 1;
+}
+
 int CGI::write_to_child()
 {
-    if (pipe_in[1] == -1)
-        return (std::cerr << "Invalid pipe state: write end is closed\n", client->generate_error_response(500), client->status = WRITE, -1);
-    ssize_t bytes = 0;
-
-    while((bytes = write(pipe_in[1], client->parsed_request.body.c_str() + data_send, client->parsed_request.body.size() - data_send)) > 0)
-        data_send += bytes;
-
-    if (bytes == -1)
+    if (writing)
         return 0;
 
-    if (data_send == client->parsed_request.body.size())
+    size_t total_size = client->parsed_request.body.size();
+    size_t remaining = total_size - data_send;
+    
+    if (remaining == 0)
     {
         writing = 1;
-        close(pipe_in[1]);
+        lseek(file_in, 0, SEEK_SET);
+        return 0;
+    }
+
+    size_t chunk_size = (remaining > 4096) ? 4096 : remaining;
+    ssize_t bytes = write(file_in, client->parsed_request.body.c_str() + data_send, chunk_size);
+
+    if (bytes > 0)
+    {
+        data_send += bytes;
+        if (data_send == total_size)
+        {
+            writing = 1;
+            lseek(file_in, 0, SEEK_SET);
+        }
+    }
+    else if (bytes == -1)
+    {
+        std::cerr << "write to temp file failed: " << strerror(errno) << '\n';
+        client->generate_error_response(500);
+        client->status = WRITE;
+        return -1;
     }
     return 0;
 }
 
 int CGI::check_child()
 {
-    int status;
-    pid_t ret = waitpid(pid, &status, WNOHANG);
+    int status_loc;
+    pid_t ret = waitpid(pid, &status_loc, WNOHANG);
 
     if (ret == -1)
     {
-        std::cerr << "waitpit: " << strerror(errno) << '\n';
+        std::cerr << "waitpid: " << strerror(errno) << '\n';
         client->generate_error_response(500);
         client->status = WRITE;
         return -1;
@@ -218,50 +270,73 @@ int CGI::check_child()
     if (ret == pid)
     {
         child_finished = 1;
+        pid = -1;
 
-        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+        if (!WIFEXITED(status_loc) || WEXITSTATUS(status_loc) != 0)
         {
             client->generate_error_response(500);
             client->status = WRITE;
             return -1;
         }
+        lseek(file_out, 0, SEEK_SET);
     }
     return 0;
 }
 
 int CGI::reading_from_child()
 {
-    char buffer[1024];
-    ssize_t bytes = 0;
-    while ((bytes = read(pipe_out[0], buffer, sizeof(buffer))) > 0)
+    char buffer[4096];
+    ssize_t bytes = read(file_out, buffer, sizeof(buffer));
+
+    if (bytes > 0)
+    {
         cgi_buffer.append(buffer, bytes);
-    if (bytes == -1)
-        return 0;
-    if (bytes == 0)
+    }
+    else if (bytes == 0)
     {
         reading = 1;
+        close(file_out);
+        file_out = -1;
+    }
+    else
+    {
+        std::cerr << "read from output file failed: " << strerror(errno) << '\n';
+        client->generate_error_response(500);
+        client->status = WRITE;
+        return -1;
     }
     return 0;
 }
 
 void CGI::check_cgi(struct pollfd& p)
 {
-    if (!writing && (p.revents | POLLIN))
+    (void)p;
+
+    if (!writing)
     {
-        if (write_to_child())
-            return ;
-        // std::cout << "writing\n";
+        if (write_to_child() == -1)
+            return;
+        if (writing)
+        {
+            if (run_cgi_process() == -1)
+                return;
+        }
+        return;
     }
+
     if (!child_finished)
-        if (check_child())
-            return ;
-    if (!reading && (p.revents | POLLOUT))
     {
-        if (reading_from_child())
-            return ;
-        // std::cout << "reading\n";
+        if (check_child() == -1)
+            return;
     }
-    if (child_finished && reading)
+
+    if (child_finished && !reading)
+    {
+        if (reading_from_child() == -1)
+            return;
+    }
+
+    if (writing && child_finished && reading)
         status = FINISHED;
 }
 
@@ -311,46 +386,41 @@ void CGI::create_envs()
     env[envs.size()] = NULL;
 }
 
-
-int CGI::run_cgi()
+int CGI::run_cgi_process()
 {
     pid = fork();
-
     if (pid == -1)
-        return (std::cerr << "fork: " + std::string(strerror(errno)) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
-    
+    {
+        std::cerr << "fork system call failed\n";
+        client->generate_error_response(500);
+        client->status = WRITE;
+        return -1;
+    }
+
     if (pid == 0)
     {
-        std::cout << "from child\n";
-        dup2(pipe_in[0], STDIN_FILENO);
-        dup2(pipe_out[1], STDOUT_FILENO);
-        close(pipe_in[0]);
-        close(pipe_in[1]);
-        close(pipe_out[0]);
-        close(pipe_out[1]);
+        if (chdir(dir.c_str()) == -1)
+        {
+            std::cerr << "chdir failed: " << strerror(errno) << '\n';
+            _exit(1);
+        }
+        dup2(file_in, STDIN_FILENO);
+        dup2(file_out, STDOUT_FILENO);
+
+        close(file_in);
+        close(file_out);
+
         if (arg == NULL || env == NULL)
         {
-            if (arg == NULL)
-                std::cerr << "Invalid arguments for execve\n";
-            if (env == NULL)
-                std::cerr << "Invalid environment for execve\n";
-            if (arg == NULL && env == NULL)
-                std::cerr << "Invalid arguments and environment for execve\n";
-            exit(1);
+            _exit(1);
         }
-        if (execve(arg[0], arg, env) == -1)
-        {
-            // std::cerr << strerror(errno) << '\n';
-            exit(1);
-        }
-    }else
+        execve(arg[0], arg, env);
+        _exit(1);
+    }
+    else
     {
-        // std::cout << "from parent\n";
-        close(pipe_in[0]);
-        close(pipe_out[1]);
-        pipe_in[0] = -1;
-        pipe_out[1] = -1;
-        status = RUNNING;
+        close(file_in);
+        file_in = -1;
     }
     return 1;
 }
@@ -373,96 +443,38 @@ int CGI::checking_permission()
     return 1;
 }
 
-int set_nonblocking(int fd)
+void CGI::create_args()
 {
-    int flags = fcntl(fd, F_GETFL, 0);
-    if (flags < 0)
-    {
-        perror("fcntl F_GETFL");
-        return -1;
-    }
-
-    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
-    {
-        perror("fcntl F_SETFL");
-        return -1;
-    }
-    return 0;
-}
-
-int CGI::pipe_init()
-{
-    if (pipe(pipe_in) == -1)
-        return (std::cerr << "pipe: " + std::string(strerror(errno)) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
-    
-    if (set_nonblocking(pipe_in[1]) == -1)
-        return (std::cerr << "pipe: " + std::string(strerror(errno)) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
-    
-    if (pipe(pipe_out) == -1)
-        return (std::cerr << "pipe: " + std::string(strerror(errno)) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
-
-    if (set_nonblocking(pipe_out[0]) == -1)
-        return (std::cerr << "pipe: " + std::string(strerror(errno)) << '\n', client->generate_error_response(500), client->status = WRITE, -1);
-    return 1;
-}
-
-void    CGI::create_args()
-{
+    dir = client->checker.root.substr(0, client->checker.root.find_last_of('/'));
+    script = client->checker.root.substr(client->checker.root.find_last_of('/') + 1);
     arg = new char*[3];
     
     arg[0] = new char[client->checker.compailer.length() + 1];
     strcpy(arg[0], client->checker.compailer.c_str());
 
-    arg[1] = new char[client->checker.root.length() + 1];
-    strcpy(arg[1], client->checker.root.c_str());
+    arg[1] = new char[script.length() + 1];
+    strcpy(arg[1], script.c_str());
 
     arg[2] = NULL;
 }
 
-void    CGI::set_cgi_pfds(std::vector<struct pollfd>&  pfds)
+void CGI::starting_cgi(std::vector<struct pollfd>& pfds, struct pollfd& p)
 {
-    // std::cout << "seting pipes in poll\n";
-    if (pipe_in[1] != -1)
-    {
-        // std::cout << "pipe_in\n";
-        struct pollfd fd_in;
-        fd_in.fd = pipe_in[1];
-        fd_in.events = POLLOUT;
-        pfds.push_back(fd_in);
-        // std::cout << "seting pipe "<<pfds.back().fd << " to pfds" << '\n';
-    }
-    if (pipe_out[0] != -1)
-    {
-        // std::cout << "pipe_out\n";
-        struct pollfd fd_out;
-        fd_out.fd = pipe_out[0];
-        fd_out.events = POLLIN;
-        pfds.push_back(fd_out);
-        // std::cout << "seting pipe "<<pfds.back().fd << " to pfds" << '\n';
-    }
-}
-
-void    CGI::starting_cgi(std::vector<struct pollfd>&  pfds, struct pollfd& p)
-{
+    (void)pfds;
     if (status == NOT_RUNNING)
     {
-        signal(SIGPIPE, SIG_IGN);
-        if(checking_permission() == -1)
-            return ;
-        if(pipe_init() == -1)
-            return ;
+        if (checking_permission() == -1)
+            return;
+        if (file_init() == -1)
+            return;
         create_envs();
         create_args();
-        if (run_cgi() == -1)
-            return ;
-        set_cgi_pfds(pfds);
-        return ;
+        status = RUNNING;
     }
-    if(status == RUNNING)
+    if (status == RUNNING)
         check_cgi(p);
     if (status == FINISHED)
     {
-        // std::cout << "\ncgi FINISHED\n";
         building_response();
     }
 }
