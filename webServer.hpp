@@ -3,26 +3,47 @@
 /*                                                        :::      ::::::::   */
 /*   webServer.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: roubelka <roubelka@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/26 23:06:52 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/04/28 17:23:59 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/07/01 18:40:00 by roubelka         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#ifndef WEBSERVER_HPP
+#define WEBSERVER_HPP
+
+#include <map>
+#include <string>
+#include <vector>
+#include <poll.h>
+#include "Client.hpp"
+#include "ConfigParser.hpp"
+
+#define BACKLOG 1024
+#define MAX_EVENTS 64
+
+class Client;
 
 class WebServer
 {
 private:
-    // configuration
-    Config      config;                  // loaded from file
-    int         server_fd;              // the listening socket
-    // socket operations
-    void setupSocket();                  // create, bind, listen
-    void acceptClient();                 // accept incoming connection
-    std::string readRequest(int fd);           // read raw HTTP request
-    void        sendResponse(int fd, HttpResponse); // send back
+    // int                         kq;
+    Config                      config;
+    std::vector<int>            server_sd;
+    std::vector<struct pollfd>  pfds;
+    std::map<int, Client>       clients;
+    
+    void setupSocket();
+    void acceptClient(int);
+    void addListenFds();
+    void HandleClient(struct pollfd& fd);
+    
     
 public:
-    WebServer(std::string config_file);  // load configuration
-    void run();                          // start the server loop
+    WebServer(std::string config_file);
+    ~WebServer();
+    void run();
 };
+
+#endif

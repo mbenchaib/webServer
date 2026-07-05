@@ -1,0 +1,60 @@
+:root {
+  --bg: #0a0b10;
+  --bg-elev: #11141c;
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-strong: rgba(255, 255, 255, 0.08);
+  --surface-soft: rgba(255, 255, 255, 0.03);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text: #f5f7fb;
+  --text-muted: #9ca3b3;
+  --text-dim: #6c7384;
+  --accent-1: #6366f1;
+  --accent-2: #8b5cf6;
+  --accent-3: #22d3ee;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --grad-accent: linear-gradient(135deg, #6366f1 0%, #8b5cf6 45%, #22d3ee 100%);
+  --grad-text: linear-gradient(120deg, #a5b4fc 0%, #c4b5fd 42%, #67e8f9 100%);
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+  --r-pill: 999px;
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 12px 34px rgba(0, 0, 0, 0.34);
+  --shadow-lg: 0 26px 70px rgba(0, 0, 0, 0.42);
+  --glow: 0 0 42px rgba(99, 102, 241, 0.32);
+  --font-sans: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --container: 1220px;
+  --sidebar: 270px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --t-fast: 0.16s;
+  --t-med: 0.28s;
+}
+
+:root[data-theme="light"] {
+  --bg: #eff2f8;
+  --bg-elev: #ffffff;
+  --surface: rgba(255, 255, 255, 0.76);
+  --surface-strong: rgba(255, 255, 255, 0.96);
+  --surface-soft: rgba(255, 255, 255, 0.6);
+  --border: rgba(18, 24, 40, 0.08);
+  --border-strong: rgba(18, 24, 40, 0.14);
+  --text: #101828;
+  --text-muted: #475467;
+  --text-dim: #667085;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 18px 44px rgba(15, 23, 42, 0.10);
+  --shadow-lg: 0 28px 76px rgba(15, 23, 42, 0.12);
+}

@@ -1,0 +1,64 @@
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(99, 102, 241, 0);
+  }
+  50% {
+    box-shadow: 0 0 42px rgba(99, 102, 241, 0.22);
+  }
+}
+
+.reveal {
+  animation: fadeInUp 0.65s var(--ease) both;
+}
+
+.reveal-1 {
+  animation-delay: 0.06s;
+}
+
+.reveal-2 {
+  animation-delay: 0.14s;
+}
+
+.reveal-3 {
+  animation-delay: 0.22s;
+}
+
+.reveal-4 {
+  animation-delay: 0.3s;
+}
+
+.float {
+  animation: float 8s ease-in-out infinite;
+}
+
+.glow {
+  animation: glowPulse 4.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
