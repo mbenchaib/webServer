@@ -44,17 +44,17 @@ class CGI
         bool            pipe_closed;
         std::string     cgi_buffer;
         child_status    status;
-        Client* client;
+        Client*         client;
 
         std::string     in_path;
         std::string     out_path;
 
         CGI();
         CGI(const CGI& other);
-        CGI& operator=(const CGI& other);
+        CGI&    operator=(const CGI& other);
         ~CGI();
 
-        void setClient(Client *c);
+        void    setClient(Client *c);
 
         int     run_cgi_process(void);
         void    check_cgi(struct pollfd& p);

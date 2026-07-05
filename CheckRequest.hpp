@@ -36,6 +36,6 @@ class CheckRequest
         void    validate();
 };
 
-std::string create_301_302_response(std::string code, std::string path);
+std::string retrun_response(std::string code, std::string path);
 
 #endif
