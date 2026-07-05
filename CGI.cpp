@@ -82,9 +82,6 @@ CGI& CGI::operator=(const CGI& other)
     if (file_in >= 0) close(file_in);
     if (file_out >= 0) close(file_out);
 
-    if (!in_path.empty()) unlink(in_path.c_str());
-    if (!out_path.empty()) unlink(out_path.c_str());
-
     pid = -1;
     file_in = -1;
     file_out = -1;
@@ -111,9 +108,6 @@ CGI::~CGI()
 
     if (file_in >= 0) close(file_in);
     if (file_out >= 0) close(file_out);
-
-    if (!in_path.empty()) unlink(in_path.c_str());
-    if (!out_path.empty()) unlink(out_path.c_str());
 
     if (pid > 0)
     {
@@ -188,8 +182,8 @@ void CGI::building_response(void)
 int CGI::file_init()
 {
     std::ostringstream ss_in, ss_out;
-    ss_in << "/tmp/webserv_cgi_in_" << getpid() << "_" << reinterpret_cast<intptr_t>(this);
-    ss_out << "/tmp/webserv_cgi_out_" << getpid() << "_" << reinterpret_cast<intptr_t>(this);
+    ss_in << "/tmp/webserv_cgi_in_" << "_" << reinterpret_cast<intptr_t>(this);
+    ss_out << "/tmp/webserv_cgi_out_" << "_" << reinterpret_cast<intptr_t>(this);
     
     in_path = ss_in.str();
     out_path = ss_out.str();
@@ -209,7 +203,6 @@ int CGI::file_init()
         std::cerr << "Failed to create output file: " << out_path << '\n';
         close(file_in);
         file_in = -1;
-        unlink(in_path.c_str());
         client->generate_error_response(500);
         client->status = WRITE;
         return -1;

@@ -135,9 +135,9 @@ void    Request::parse_request(const std::string& raw)
 
         for (size_t i = 0; i < key.size(); ++i) key[i] = std::tolower(key[i]);
 
-        if (key == "host" && host.empty()) { host = value; continue; }
-        if (key == "content-type" && content_type.empty()) { content_type = value; continue; }
-        
+        if (key == "host" && host.empty()) { host = value;}
+        if (key == "content-type" && content_type.empty()) { content_type = value;}
+
         headers[key] = value;
     }
     check_body_len();

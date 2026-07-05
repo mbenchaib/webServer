@@ -90,7 +90,6 @@ void Client::generate_error_response(int code)
 
 Client::Client(void) : config(NULL), fd(-1), status(READ), read_body(0), bytes_send_to_client(0)
 {
-    // std::cout << "client have created by default\n";
     cgi.setClient(this);
     checker.set_client(*this);
 }
@@ -106,7 +105,6 @@ Client::Client(const Client& other) : config(other.config), cgi(other.cgi),
 
 Client::Client(int fd, Config& config) : config(&config), fd(fd), status(READ), read_body(0), bytes_send_to_client(0)
 {
-    // std::cout << "client have created\n";
     cgi.setClient(this);
     checker.set_client(*this);
 }
@@ -141,7 +139,6 @@ int Client::check_recv_error(int bytes)
 {
     if (bytes == 0)
     {
-        // std::cout << "client disconnected in midel of sending request\n";
         status = CLOSE;
         return 0; 
     }
@@ -166,9 +163,7 @@ void Client::reading_request(void)
     while (true)
     {
         ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
-        // std::cout << "reading from fd\n";
-        // int state = check_recv_error(bytes);
-        
+
         if (bytes < 1) { break;}
 
         raw_buffer.append(buffer, bytes);
@@ -177,15 +172,11 @@ void Client::reading_request(void)
     // Parse headers (outside the loop)
     if (!read_body)
     {
-        // std::cout << "we check for empty line\n";
         size_t pos = raw_buffer.find("\r\n\r\n");
         if (pos != std::string::npos)
         {
-            // std::cout << "we found empty line\n";
             std::string header_block = raw_buffer.substr(0, pos);
-            // std::cout << "we cut header body\n";
             raw_buffer = raw_buffer.substr(pos + 4);
-            // std::cout << "we cut body and it size is " << raw_buffer.size() << '\n';
             parsed_request.parse_request(header_block);
             if (!parsed_request.valid)
             {
@@ -215,10 +206,8 @@ void Client::reading_request(void)
     // Parse body (outside the loop)
     if (read_body)
     {
-        // std::cout << "now we parsing the body\n";
         if (parsed_request.is_chunked)
         {
-            // std::cout << "parsing chunked body\n";
             parsed_request.parse_chunked_body(raw_buffer);
             if (parsed_request.chunk_state == CHUNK_DONE)
                 status = VALIDATION;
@@ -228,8 +217,6 @@ void Client::reading_request(void)
         }
         else
         {
-            // std::cout << "parsing normal body\n";
-
             parsed_request.body.append(raw_buffer);
             raw_buffer.clear();
 

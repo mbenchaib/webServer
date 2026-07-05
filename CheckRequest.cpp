@@ -42,7 +42,6 @@ int    CheckRequest::get_location(void)
     location = server->findLocation(client->parsed_request.path);
     if (location)
     {
-        // std::cout << "location found = " << location->path << "\n";
         Directive *dirs = location->getDirective("return");
         if (dirs)
             return (client->response = retrun_response(dirs->values[0], (dirs->values.size() == 2) ? dirs->values[1] : "/"), client->status = WRITE, -1);
@@ -50,7 +49,6 @@ int    CheckRequest::get_location(void)
     }
     else
     {
-        // std::cout << "location not found\n";
         Directive *dirs = server->getDirective("return");
         if (dirs)
             return (client->response = retrun_response(dirs->values[0], (dirs->values.size() == 2) ? dirs->values[1] : "/"), client->status = WRITE, -1);
@@ -168,7 +166,6 @@ void CheckRequest::cgi_or_static(void)
     std::string ext = root.substr(dot_pos);
     std::string handler;
 
-    // std::cout << "extension = " << ext << '\n';
     if (location)
     {
         handler = location->getCgiHandler(ext);
@@ -222,26 +219,15 @@ void    CheckRequest::validate()
 {
     if (!client)
         return ;
-    // std::cout << "checking server\n";
     if (!get_server())
         return ;
-    // std::cout << "checking location\n";
     if (get_location() == -1)
         return ;
-    // if (location)
-    //     // std::cout << "location_name = " << location->path << '\n';
-    // else
-        // std::cout << "no location found\n";
-    // std::cout << "checking methods\n";
     if (check_methods() == -1)
         return ;
-    // std::cout << "checking max_body\n";
     if (check_max_body() == -1)
         return ;
-    // std::cout << "checking root\n";
     if (check_root() == -1)
         return ;
-    // std::cout << "checking cgi or not\n";
     cgi_or_static();
-    // std::cout << '\n' << root << '\n';
 }

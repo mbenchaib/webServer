@@ -1,20 +1,20 @@
 NAME		= webserv
 
 CXX		= c++
-CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g
+CXXFLAGS	= -Wall -Wextra -Werror -std=c++98
 
 RM		= rm -f
 
 SRCS		= CGI.cpp \
-		  CheckRequest.cpp \
-		  Client.cpp \
-		  ConfigParser.cpp \
-		  ConfigRules.cpp \
-		  Exceptions.cpp \
-		  Request.cpp \
-		  Response.cpp \
-		  main.cpp \
-		  webServer.cpp
+			CheckRequest.cpp \
+			Client.cpp \
+			ConfigParser.cpp \
+			ConfigRules.cpp \
+			Exceptions.cpp \
+			Request.cpp \
+			Response.cpp \
+			main.cpp \
+			webServer.cpp
 
 OBJS		= $(SRCS:.cpp=.o)
 
