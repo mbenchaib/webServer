@@ -272,6 +272,7 @@ void Response::handle_post(void)
         full_path += "/";
     full_path += filename;
 
+    std::cout << full_path << '\n';
     int fd = open(full_path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd < 0)
     {
@@ -292,6 +293,7 @@ void Response::handle_post(void)
         if (n <= 0)
         {
             close(fd);
+            std::cout << "test\n";
             client->generate_error_response(500);
             return;
         }

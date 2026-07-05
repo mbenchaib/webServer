@@ -21,11 +21,11 @@ async function upload() {
     const file = input.files[0];
 
     const response = await fetch(
-        "http://localhost:8080/images/" + encodeURIComponent(file.name),
+        "http://localhost:8080/upload/" + encodeURIComponent(file.name),
         {
             method: "POST",
             headers: {
-                "Content-Type": file.type || "application/octet-stream"
+                "Content-Type": file.type
             },
             body: file
         }

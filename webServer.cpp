@@ -6,7 +6,7 @@
 /*   By: mben-cha <mben-cha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/27 16:34:38 by mben-cha          #+#    #+#             */
-/*   Updated: 2026/07/02 15:46:43 by mben-cha         ###   ########.fr       */
+/*   Updated: 2026/07/02 23:53:11 by mben-cha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -209,47 +209,64 @@ Client* WebServer::bring_client(struct pollfd& fd)
 
 void    WebServer::HandleClient(struct pollfd& fd)
 {
-    Client& clian = *bring_client(fd);
+    Client* clian = bring_client(fd);
     // clian.parsed_request.print();
     // hna can9ra men client request ou nparsih
-    if (clian.status == READ && fd.revents & POLLIN)
+    if (!clian)
+        return ;
+    if (clian->status == READ && fd.revents & POLLIN)
     {
         // std::cout << "server read now\n";
-        clian.reading_request();
+        clian->reading_request();
     }
     // hnakanvalidi wach request huwahadak awla
-    if (clian.status == VALIDATION)
+    if (clian->status == VALIDATION)
     {
         // std::cout << "validating client request\n";
-        clian.checker.validate();
+        clian->checker.validate();
     }
     // hnaya rashid ybuidy static response dyalo
-    if (clian.status == STATIC)
+    if (clian->status == STATIC)
     {
         // std::cout << "builting STATIC response now\n";
-        Response(clian).build();
+        Response(*clian).build();
     }
     // hnaya cankhadem cgi ou canbuidy response
-    if (clian.status == CGI_RUNNING)
+    if (clian->status == CGI_RUNNING)
     {
         // std::cout << "builting CGI response now\n";
-        clian.cgi.starting_cgi(pfds, fd);
+        clian->cgi.starting_cgi(pfds, fd);
     }
     // hnaya cancoun salit men building response ou cansardo n client
-    if ((clian.status == WRITE || timeout_check(clian)) && fd.revents & POLLOUT)
+    if ((clian->status == WRITE || timeout_check(*clian)) && fd.revents & POLLOUT)
     {
-        // clian.parsed_request.print();
-        clian.sending_response();
+        // clian->parsed_request.print();
+        clian->sending_response();
     }
     // hna mli kansali client canmsho
-    if (clian.status == CLOSE)
+    if (clian->status == CLOSE)
     {
         // std::cout << "server close client\n";
 
         close(fd.fd);
 
+        // for (std::vector<pollfd>::iterator it = pfds.begin(); it != pfds.end(); ++it)
+        // {
+        //     if (it->fd == clian->cgi.pipe_in[1])
+        //     {
+        //         pfds.erase(it);
+        //         break;
+        //     }
+        // }
+        // for (std::vector<pollfd>::iterator it = pfds.begin(); it != pfds.end(); ++it)
+        // {
+        //     if (it->fd == clian->cgi.pipe_out[0])
+        //     {
+        //         pfds.erase(it);
+        //         break;
+        //     }
+        // }
         clients.erase(fd.fd);
-
         for (std::vector<pollfd>::iterator it = pfds.begin(); it != pfds.end(); ++it)
         {
             if (it->fd == fd.fd)
@@ -313,10 +330,10 @@ void WebServer::run()
                 
                 close(fd);
                 pfds.erase(pfds.begin() + i);
-                bool    isPipe = (clients.find(fd) == clients.end());
-                if (!isPipe)
-                    clients.erase(fd);
-                else if (isListening)
+                // bool    isPipe = (clients.find(fd) == clients.end());
+                // if (!isPipe)
+                //     clients.erase(fd);
+                if (isListening)
                 {
                     std::vector<int>::iterator it = std::find(server_sd.begin(), server_sd.end(), fd); 
                     server_sd.erase(it);

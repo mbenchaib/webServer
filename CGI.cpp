@@ -115,7 +115,7 @@ CGI::~CGI()
     if (pid > 0)
     {
         kill(pid, SIGKILL);
-        waitpid(pid, NULL, WNOHANG);
+        waitpid(pid, NULL, 0);
     }
 }
 
@@ -220,6 +220,7 @@ int CGI::check_child()
     if (ret == pid)
     {
         child_finished = 1;
+        pid = -1;
 
         if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
         {
@@ -281,6 +282,7 @@ void CGI::create_envs()
     envs.push_back("SCRIPT_FILENAME=" + client->checker.root);
     envs.push_back("PATH_INFO=" + client->parsed_request.path);
     envs.push_back("PATH_TRANSLATED=" + client->checker.root);
+    // envs.push_back("redirect_status=200");
 
     if (client->parsed_request.method == "POST")
     {
