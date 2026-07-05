@@ -1,11 +1,5 @@
 #include "Client.hpp"
 #include "CGI.hpp"
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/wait.h>
-#include <cstring>
-#include <iostream>
-#include <sstream>
 
 void CGI::setClient(Client *c)
 {

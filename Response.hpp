@@ -1,7 +1,15 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
+#include "Client.hpp"
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <fstream>
+#include <sstream>
 #include <string>
+#include <cstdio>
 
 // class dyal response -> kibni HTTP response men request li tvalida
 // kireuse checker.root, checker.is_a_dir, server/location ou config

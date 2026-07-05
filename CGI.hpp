@@ -1,10 +1,15 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 
-#include <vector>
-#include <string>
 #include <sys/poll.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <iostream>
+#include <fcntl.h>
+#include <sstream>
+#include <vector>
+#include <string>
 
 class Client;
 

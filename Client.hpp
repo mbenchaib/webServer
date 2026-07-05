@@ -17,6 +17,8 @@
 #include <sstream>
 #include "CheckRequest.hpp"
 #include "CGI.hpp"
+#include <climits>
+#include <cstring>
 
 typedef enum hala
 {

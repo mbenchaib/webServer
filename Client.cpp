@@ -1,6 +1,4 @@
 #include "Client.hpp"
-#include <climits>
-#include <cstring>
 
 std::string get_http_msg(int code)
 {

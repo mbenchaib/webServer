@@ -1,6 +1,4 @@
 #include "Request.hpp"
-#include <algorithm>
-#include <climits>
 
 Request::Request(void) : error_code(0), method(), path(), query_string(), version(),
     host(), body(), content_type(), body_len(0), valid(true), is_chunked(false),

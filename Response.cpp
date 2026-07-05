@@ -1,10 +1,4 @@
 #include "Response.hpp"
-#include "Client.hpp"
-#include <fstream>
-#include <sstream>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <cstdio>
 
 Response::Response(Client& client) : client(&client) {}
 
@@ -217,10 +211,6 @@ void Response::handle_get(void)
     else
         serve_file(client->checker.root);
 }
-
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 void Response::handle_post(void)
 {

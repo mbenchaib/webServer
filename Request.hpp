@@ -7,6 +7,8 @@
 #include <sstream>
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
+#include <climits>
 
 enum ChunkState {
     CHUNK_SIZE,
