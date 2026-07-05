@@ -63,7 +63,6 @@ class Client
         // had can sared response n client
         void    sending_response(void);
 
-        int     check_recv_error(int bytes);
         void    generate_error_response(int code);
 };
 

@@ -130,28 +130,6 @@ Client& Client::operator=(const Client& other)
 }
 
 Client::~Client() {}
-        
-
-
-int Client::check_recv_error(int bytes)
-{
-    if (bytes == 0)
-    {
-        status = CLOSE;
-        return 0; 
-    }
-    else if (bytes == -1)
-    {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
-            return -1;
-
-        std::cerr << "recv error: " << strerror(errno) << std::endl;
-        status = CLOSE;
-        return 0; 
-    }
-    return 1; 
-}
-// hadi member function biha client ki9ra men fd
 
 void Client::reading_request(void)
 {
