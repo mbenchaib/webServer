@@ -1,6 +1,4 @@
 #include "Request.hpp"
-#include <algorithm>
-#include <climits>
 
 Request::Request(void) : error_code(0), method(), path(), query_string(), version(),
     host(), body(), content_type(), body_len(0), valid(true), is_chunked(false),
@@ -135,9 +133,9 @@ void    Request::parse_request(const std::string& raw)
 
         for (size_t i = 0; i < key.size(); ++i) key[i] = std::tolower(key[i]);
 
-        if (key == "host" && host.empty()) { host = value; continue; }
-        if (key == "content-type" && content_type.empty()) { content_type = value; continue; }
-        
+        if (key == "host" && host.empty()) { host = value;}
+        if (key == "content-type" && content_type.empty()) { content_type = value;}
+
         headers[key] = value;
     }
     check_body_len();

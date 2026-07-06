@@ -1,10 +1,4 @@
 #include "Response.hpp"
-#include "Client.hpp"
-#include <fstream>
-#include <sstream>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <cstdio>
 
 Response::Response(Client& client) : client(&client) {}
 
@@ -218,9 +212,109 @@ void Response::handle_get(void)
         serve_file(client->checker.root);
 }
 
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+void Response::handleMultipartUpload()
+{
+    std::string upload_dir = get_upload_path();
+    if (upload_dir.empty())
+    {
+        client->generate_error_response(403);
+        return;
+    }
+    std::string contentType = client->parsed_request.content_type;
+
+    size_t pos = contentType.find("boundary=");
+    if (pos == std::string::npos)
+    {
+        client->generate_error_response(400);
+        return;
+    }
+
+    std::string boundary = "--" + contentType.substr(pos + 9);
+
+    const std::string &body = client->parsed_request.body;
+
+    // Find filename
+    size_t filenamePos = body.find("filename=\"");
+    if (filenamePos == std::string::npos)
+    {
+        client->generate_error_response(400);
+        return;
+    }
+
+    filenamePos += 10;
+
+    size_t filenameEnd = body.find('"', filenamePos);
+    if (filenameEnd == std::string::npos)
+    {
+        client->generate_error_response(400);
+        return;
+    }
+
+    std::string filename = body.substr(filenamePos,
+                                       filenameEnd - filenamePos);
+
+    // Find beginning of file data
+    size_t dataStart = body.find("\r\n\r\n", filenameEnd);
+    if (dataStart == std::string::npos)
+    {
+        client->generate_error_response(400);
+        return;
+    }
+
+    dataStart += 4;
+
+    // Find ending boundary
+    size_t dataEnd = body.find(boundary, dataStart);
+    if (dataEnd == std::string::npos)
+    {
+        client->generate_error_response(400);
+        return;
+    }
+
+    // Remove the "\r\n" immediately before the boundary
+    if (dataEnd >= 2)
+        dataEnd -= 2;
+
+    const char *fileData = body.data() + dataStart;
+    size_t fileSize = dataEnd - dataStart;
+
+    std::string savePath = upload_dir + "/" + filename;
+
+    int fd = open(savePath.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (fd < 0)
+    {
+        if (errno == EACCES)
+            client->generate_error_response(403);
+        else
+            client->generate_error_response(500);
+        return;
+    }
+
+    size_t written = 0;
+
+    while (written < fileSize)
+    {
+        ssize_t n = write(fd, fileData + written, fileSize - written);
+        if (n <= 0)
+        {
+            close(fd);
+            client->generate_error_response(500);
+            return;
+        }
+        written += n;
+    }
+
+    close(fd);
+
+    client->response = build_response(
+        201,
+        "text/html",
+        "<html>\r\n"
+        "<body>\r\n"
+        "<h1>201 Created</h1>\r\n"
+        "</body>\r\n"
+        "</html>");
+}
 
 void Response::handle_post(void)
 {
@@ -251,9 +345,7 @@ void Response::handle_post(void)
     }
 
     std::string filename;
-    std::cout << "Here\n";
     std::string uri = client->parsed_request.path;
-    std::cout << uri << std::endl;
     size_t pos = uri.find_last_of('/');
 
     if (pos == std::string::npos)
@@ -335,6 +427,15 @@ void Response::handle_delete(void)
 }
 
 // ===== entry point =====
+bool Response::isMultipartRequest() const
+{
+    const std::string &contentType = client->parsed_request.content_type;
+    if (contentType.empty())
+        return false;
+
+    return (contentType.find("multipart/form-data") != std::string::npos &&
+            contentType.find("boundary=") != std::string::npos);
+}
 
 void Response::build(void)
 {
@@ -343,7 +444,16 @@ void Response::build(void)
     if (method == "GET")
         handle_get();
     else if (method == "POST")
-        handle_post();
+    {
+        if(isMultipartRequest())
+        {
+            handleMultipartUpload();
+        }
+        else
+        {
+            handle_post();
+        }
+    }
     else if (method == "DELETE")
         handle_delete();
     else

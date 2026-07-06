@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Webserv Control Panel · Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+</head>
+<body data-page="dashboard">
+  <div class="page-shell">
+    <aside class="sidebar">
+      <a class="sidebar__brand" href="dashboard.html" aria-label="Webserv dashboard home">
+        <img src="assets/logo.svg" alt="" />
+        <div>
+          <strong>Webserv Control Panel</strong>
+          <span>42 testing dashboard</span>
+        </div>
+      </a>
+
+      <div class="sidebar__section">
+        <div class="sidebar__label">Workspace</div>
+        <nav class="sidebar__nav" aria-label="Primary navigation">
+          <a class="sidebar__link is-active" href="dashboard.html" data-page-link="dashboard">
+            <span>Dashboard</span>
+            <span class="badge">Live</span>
+          </a>
+          <a class="sidebar__link" href="playground.html" data-page-link="playground">
+            <span>HTTP Playground</span>
+            <span class="badge">Send</span>
+          </a>
+        </nav>
+      </div>
+
+<div class="team-card">
+
+    <h3 class="team-title">
+        <span class="team-dot"></span>
+        TEAM
+    </h3>
+
+<div class="member">
+
+    <img src="assets/roubelka.jpg" class="avatar">
+
+    <div class="member-info">
+
+        <h4>Rachid Oubelkasse</h4>
+
+        <p></p>
+
+        <div class="socials">
+
+            <a href="https://github.com/rachidIRT" target="_blank">
+                <img src="assets/icons/github.svg">
+            </a>
+
+            <a href="https://linkedin.com/in/rachidoubelkasse" target="_blank">
+                <img src="assets/icons/linkedin.svg">
+            </a>
+
+        </div>
+
+    </div>
+
+    <span class="online-dot"></span>
+
+</div>
+
+<div class="member">
+
+    <img src="assets/mben-cha.png" class="avatar">
+
+    <div class="member-info">
+
+        <h4>Mohamed Ben Chaib</h4>
+
+        <p></p>
+
+        <div class="socials">
+
+            <a href="https://github.com/Don11235" target="_blank">
+                <img src="assets/icons/github.svg">
+            </a>
+
+            <a href="https://linkedin.com/in/mohamed-ben-cha" target="_blank">
+                <img src="assets/icons/linkedin.svg">
+            </a>
+
+        </div>
+
+    </div>
+
+    <span class="online-dot"></span>
+
+</div>
+
+<div class="member">
+
+    <img src="assets/ael-kha.png" class="avatar">
+
+    <div class="member-info">
+
+        <h4>Safouan El Khammari</h4>
+
+        <p></p>
+
+        <div class="socials">
+
+            <a href="https://github.com/safouankh" target="_blank">
+                <img src="assets/icons/github.svg">
+            </a>
+
+            <a href="https://linkedin.com/in/safouan-el-khammari" target="_blank">
+                <img src="assets/icons/linkedin.svg">
+            </a>
+
+        </div>
+
+    </div>
+
+    <span class="online-dot"></span>
+
+</div>
+
+      <!-- <div class="sidebar__hint">
+        <p><strong>Workflow</strong><br />Use the quick probes here, then move to the playground for full request debugging and response inspection.</p>
+      </div> -->
+    </aside>
+
+    <main class="workspace" data-dashboard-root>
+      <div class="page">
+        <header class="topbar glass">
+          <div class="topbar__title">
+            <p class="eyebrow">Developer control panel</p>
+            <h1>Dashboard</h1>
+            <p>Every tester below sends a real Fetch request to the running Webserv instance.</p>
+          </div>
+          <div class="topbar__meta">
+            <span class="chip" data-server-chip><span class="chip__dot"></span> Server <strong data-server-state>Checking</strong></span>
+            <span class="chip">Port <strong data-bind="port">-</strong></span>
+            <span class="chip">Host <strong data-bind="host">-</strong></span>
+            <span class="chip">Active route <strong data-active-route>/</strong></span>
+            <span class="chip">Requests <strong data-request-count>0</strong></span>
+            <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle theme">☾</button>
+            <button class="icon-btn" type="button" data-refresh-page aria-label="Refresh page">↻</button>
+          </div>
+        </header>
+
+        <section class="hero reveal reveal-1 glass">
+
+    <div class="hero-left">
+
+        <div class="hero__meta">
+            <span class="eyebrow glow">Server Health</span>
+            <span class="chip">Root <strong data-bind="root">/www1</strong></span>
+            <span class="chip">Last refresh <strong data-clock>--:--</strong></span>
+            <span class="chip">Last response <strong data-server-response>200 OK</strong></span>
+        </div>
+
+        <div class="hero__title">
+
+            <h2>
+                Test your server
+                <span>without curl.</span>
+            </h2>
+
+            <p>
+                Use the cards below to fire live GET, POST, DELETE,
+                upload, CGI, autoindex, error pages,
+                MIME and keep-alive probes directly against Webserv.
+            </p>
+
+        </div>
+
+        <div class="hero__actions">
+
+            <button class="btn"
+                type="button"
+                data-request-action="fetch"
+                data-method="GET"
+                data-url="/"
+                data-label="GET /">
+                GET /
+            </button>
+
+            <a class="btn btn--ghost"
+               href="playground.html">
+                Open HTTP Playground
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="hero-right">
+
+        <img
+            src="assets/server-hero.png"
+            alt="Web Server">
+
+    </div>
+
+</section>
+
+        <section class="grid reveal reveal-2">
+          <div class="section-title">
+            <div>
+              <h3>Live metrics</h3>
+              <p>Updated from the latest real HTTP response.</p>
+            </div>
+            <span class="status-chip status-chip--good" data-dashboard-response-badge>Ready</span>
+          </div>
+          <div class="metrics">
+            <article class="metric metric--accent">
+
+    <img
+        src="assets/icons/activity.svg"
+        class="metric-icon"
+        alt="Server State">
+
+    <div class="metric__label">
+        Server state
+    </div>
+
+    <div
+        class="metric__value is-online"
+        data-server-state>
+        Online
+    </div>
+
+    <div
+        class="metric__sub"
+        data-dashboard-summary>
+        Waiting for a live request.
+    </div>
+
+</article>
+<article class="metric">
+
+    <img
+        src="assets/icons/clock.svg"
+        class="metric-icon"
+        alt="Clock">
+
+    <div class="metric__label">
+        Response time
+    </div>
+
+    <div class="metric__value" data-server-time>
+        0 ms
+    </div>
+
+    <div class="metric__sub">
+        Measured from the last request.
+    </div>
+
+</article>
+
+            <article class="metric">
+    <img
+        src="assets/icons/database-zap.svg"
+        class="metric-icon"
+        alt="Database">
+              <div class="metric__label">Content length</div>
+              <div class="metric__value" data-server-length>0 B</div>
+              <div class="metric__sub">Taken from the response body.</div>
+            </article>
+            <article class="metric">
+    <img 
+        src="assets/icons/headers.svg"
+        class="metric-icon"
+        alt="Headers">
+              <div class="metric__label">Headers</div>
+              <div class="metric__value" data-dashboard-headers-count>0 headers</div>
+              <div class="metric__sub">Response metadata from Webserv.</div>
+            </article>
+            <article class="metric">
+    <img
+        src="assets/icons/folder.svg"
+        class="metric-icon"
+        alt="Root">
+              <div class="metric__label">Current root</div>
+              <div class="metric__value">/www1</div>
+              <div class="metric__sub">Static dashboard workspace.</div>
+            </article>
+
+            <article class="metric">
+    <img
+        src="assets/icons/settings.svg"
+        class="metric-icon"
+        alt="Config">          
+              <div class="metric__label">Active config</div>
+              <div class="metric__value">webserv</div>
+              <div class="metric__sub">Live origin: <span data-bind="origin"></span></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="grid reveal reveal-3">
+          <div class="section-title">
+            <div>
+              <h3>Quick probes</h3>
+              <p>Simple one-click tests for the most common routes.</p>
+            </div>
+          </div>
+          <div class="quick-grid">
+            <button class="quick-action" type="button" data-request-action="fetch" data-method="GET" data-url="/" data-label="GET /">
+      <img
+        src="assets/icons/globe.svg"
+        class="quick-icon"
+        alt="GET">
+              <div class="quick-info">
+              <strong>GET /</strong>
+              <span>Open the server entry route.</span>
+              </div>
+            </button>
+
+            <button class="quick-action" type="button" data-request-action="fetch" data-method="GET" data-url="/index.html" data-label="GET /index.html">
+      <img
+        src="assets/icons/file.svg"
+        class="quick-icon"
+        alt="GET">
+              <div class="quick-info">
+              <strong>GET /index.html</strong>
+              <span>Validate static file serving.</span>
+              </div>
+            </button>
+
+            <button class="quick-action" type="button" data-request-action="fetch" data-method="GET" data-url="/images" data-label="GET /images">
+      <img
+        src="assets/icons/image.svg"
+        class="quick-icon"
+        alt="GET">
+              <div class="quick-info">
+              <strong>GET /images</strong>
+              <span>Check directory or autoindex behavior.</span>
+              </div>
+            </button>
+
+            <button class="quick-action" type="button" data-request-action="fetch" data-method="POST" data-url="/upload" data-content-type="text/plain; charset=utf-8" data-body="webserv quick post" data-label="POST /upload">
+      <img
+        src="assets/icons/upload.svg"
+        class="quick-icon"
+        alt="POST">
+              <div class="quick-info">
+              <strong>POST Upload</strong>
+              <span>Exercise the upload route.</span>
+              </div>
+            </button>
+            
+            <button class="quick-action" type="button" data-request-action="fetch" data-method="DELETE" data-url="/images/probe.txt" data-label="DELETE /images/probe.txt">
+      <img
+        src="assets/icons/delete.svg"
+        class="quick-icon"
+        alt="DELETE">
+              <div class="quick-info">
+              <strong>DELETE File</strong>
+              <span>Test delete handling.</span>
+              </div>
+            </button>
+            
+            <button class="quick-action" type="button" data-request-action="fetch" data-method="GET" data-url="/cgi-bin/hello.py" data-label="CGI hello">
+      <img
+        src="assets/icons/cgi.svg"
+        class="quick-icon"
+        alt="CGI">
+              <div class="quick-info">
+              <strong>Run CGI</strong>
+              <span>Execute the Python CGI path.</span>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <section class="tester-grid reveal reveal-4">
+          <article class="tester-card panel">
+            <div class="tester-card__head">
+              <div>
+                <h3>GET Tester</h3>
+                <p>Use live GET requests for the homepage, static files and directory routes.</p>
+              </div>
+              <span class="badge">Fetch</span>
+            </div>
+            <div class="tester-card__body">
+              <div class="tester-card__actions">
+                <button class="btn btn--ghost" type="button" data-request-action="fetch" data-method="GET" data-url="/" data-label="GET /">GET /</button>
+                <button class="btn btn--ghost" type="button" data-request-action="fetch" data-method="GET" data-url="/index.html" data-label="GET /index.html">GET /index.html</button>
+                <button class="btn btn--ghost" type="button" data-request-action="fetch" data-method="GET" data-url="/images" data-label="GET /images">GET /images</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="tester-card panel">
+            <div class="tester-card__head">
+              <div>
+                <h3>POST Tester</h3>
+                <p>Send custom payloads directly to Webserv.</p>
+              </div>
+              <span class="badge">Body</span>
+            </div>
+            <form class="tester-card__body" data-request-form="post">
+              <div class="field">
+                <span class="field__label">Target URL</span>
+                <input class="input" name="post-url" type="text" value="/upload" />
+              </div>
+              <div class="field">
+                <span class="field__label">Body</span>
+                <textarea class="textarea" name="post-body" placeholder="Write a request body here.">webserv post probe</textarea>
+              </div>
+              <div class="tester-card__actions">
+                <button class="btn" type="submit">Send POST</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="tester-card panel">
+            <div class="tester-card__head">
+              <div>
+                <h3>DELETE Tester</h3>
+                <p>Attempt file deletion against a live route.</p>
+              </div>
+              <span class="badge">DELETE</span>
+            </div>
+            <form class="tester-card__body" data-request-form="delete">
+              <div class="field">
+                <span class="field__label">Target URL</span>
+                <input class="input" name="delete-url" type="text" value="/images/probe.txt" />
+              </div>
+              <div class="tester-card__actions">
+                <button class="btn" type="submit">Send DELETE</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="tester-card panel">
+            <div class="tester-card__head">
+              <div>
+                <h3>Upload Tester</h3>
+                <p>Upload a real file through the configured upload route.</p>
+              </div>
+              <span class="badge">FormData</span>
+            </div>
+            <form class="tester-card__body" data-request-form="upload">
+              <div class="field">
+                <span class="field__label">Upload URL</span>
+                <input class="input" name="upload-url" type="text" value="/upload" />
+              </div>
+              <div class="field">
+                <span class="field__label">File</span>
+                <input class="input" name="upload-file" type="file" />
+              </div>
+              <div class="notice" data-upload-note>
+                Pick a file, then send it with Fetch using FormData.
+              </div>
+              <div class="tester-card__actions">
+                <button class="btn" type="submit">Upload file</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="tester-card panel">
+            <div class="tester-card__head">
+              <div>
+                <h3>CGI Tester</h3>
+                <p>Execute the Python CGI scripts exposed by the server.</p>
+              </div>
+              <span class="badge">CGI</span>
+            </div>
+            <div class="tester-card__body">
+              <div class="tester-card__actions">
+                <button class="btn btn--ghost" type="button" data-request-action="fetch" data-method="GET" data-url="/cgi-bin/hello.py" data-label="CGI hello">hello.py</button>
+                <button class="btn btn--ghost" type="button" data-request-action="fetch" data-method="GET" data-url="/cgi-bin/input.py" data-label="CGI input">input.py</button>
+                <button class="btn btn--ghost" type="button" data-request-action="fetch" data-method="GET" data-url="/cgi-bin/crash_exit.py" data-label="CGI crash_exit">crash_exit.py</button>
+                <button class="btn btn--ghost" type="button" data-request-action="fetch" data-method="GET" data-url="/cgi-bin/crash_abort.py" data-label="CGI crash_abort">crash_abort.py</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="tester-card panel">
+            <div class="tester-card__head">
+              <div>
+                <h3>Autoindex Tester</h3>
+                <p>Open a directory and inspect the returned listing.</p>
+              </div>
+              <span class="badge">Listing</span>
+            </div>
+            <form class="tester-card__body" data-request-form="autoindex">
+              <div class="field">
+                <span class="field__label">Directory URL</span>
+                <input class="input" name="autoindex-url" type="text" value="/images" />
+              </div>
+              <div class="tester-card__actions">
+                <button class="btn" type="submit" data-autoindex-submit>Inspect directory</button>
+              </div>
+              <div class="log-list" data-autoindex-list>
+                <div class="empty-state">Directory entries will appear here after a successful request.</div>
+              </div>
+            </form>
+          </article>
+
+          <article class="tester-card panel">
+            <div class="tester-card__head">
+              <div>
+                <h3>Error Page Tester</h3>
+                <p>Trigger actual server error responses with live requests.</p>
+              </div>
+              <span class="badge">Errors</span>
+            </div>
+            <div class="tester-card__body">
+              <div class="tester-card__actions">
+                <button class="btn btn--ghost" type="button" data-request-action="error" data-method="GET" data-url="/cgi-bin/" data-label="403 probe">403</button>
+                <button class="btn btn--ghost" type="button" data-request-action="error" data-method="GET" data-url="/definitely-missing-route" data-label="404 probe">404</button>
+                <button class="btn btn--ghost" type="button" data-request-action="error" data-method="aefaef" data-url="/index.html" data-body="webserv method probe" data-content-type="text/plain; charset=utf-8" data-label="405 probe">405</button>
+                <button class="btn btn--ghost" type="button" data-request-action="error" data-method="POST" data-url="/upload" data-body-template="large" data-content-type="text/plain; charset=utf-8" data-label="413 probe">413</button>
+                <button class="btn btn--ghost" type="button" data-request-action="error" data-method="GET" data-url="/cgi-bin/crash_exit.py" data-label="500 probe">500</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="tester-card panel">
+            <div class="tester-card__head">
+              <div>
+                <h3>MIME Tester</h3>
+                <p>Inspect the Content-Type returned by real files and routes.</p>
+              </div>
+              <span class="badge">Headers</span>
+            </div>
+            <div class="tester-card__body">
+              <div class="tester-card__actions">
+                <button class="btn btn--ghost" type="button" data-request-action="mime" data-method="GET" data-url="/index.html" data-label="MIME HTML">HTML</button>
+                <button class="btn btn--ghost" type="button" data-request-action="mime" data-method="GET" data-url="/css/base.css" data-label="MIME CSS">CSS</button>
+                <button class="btn btn--ghost" type="button" data-request-action="mime" data-method="GET" data-url="/assets/logo.svg" data-label="MIME SVG">SVG</button>
+                <button class="btn btn--ghost" type="button" data-request-action="mime" data-method="GET" data-url="/images/predator.jpg" data-label="MIME JPEG one">JPEG</button>
+                <button class="btn btn--ghost" type="button" data-request-action="mime" data-method="GET" data-url="/images/terminator.jpg" data-label="MIME JPEG two">JPEG 2</button>
+              </div>
+              <form class="tester-card__inline" data-request-form="mime">
+                <label class="field">
+                  <span class="field__label">Custom file URL</span>
+                  <input class="input" name="mime-url" type="text" value="/index.html" />
+                </label>
+                <button class="btn btn--ghost" type="submit">Inspect URL</button>
+              </form>
+              <div class="notice">Current live fixture: <strong data-mime-result>unknown</strong></div>
+            </div>
+          </article>
+
+        </section>
+
+        <section class="split reveal reveal-5">
+          <article class="panel result-layout data-dashboard-response" data-dashboard-response>
+            <div class="result-preview__head">
+              <div>
+                <h3>Response inspector</h3>
+                <p>Every test updates these live server-backed details.</p>
+              </div>
+              <span class="status-chip status-chip--good" data-response-status>Waiting</span>
+            </div>
+
+            <div class="result-grid">
+              <div class="result-item">
+                <span>Request</span>
+                <strong data-response-label>No request yet</strong>
+              </div>
+              <div class="result-item">
+                <span>URL</span>
+                <strong data-response-url>—</strong>
+              </div>
+              <div class="result-item">
+                <span>Time</span>
+                <strong data-response-duration>0 ms</strong>
+              </div>
+              <div class="result-item">
+                <span>Length</span>
+                <strong data-response-length>0 B</strong>
+              </div>
+              <div class="result-item">
+                <span>Type</span>
+                <strong data-response-type>unknown</strong>
+              </div>
+            </div>
+
+            <div class="notice" data-response-message>Send a request to inspect a real server response.</div>
+
+            <div class="response-stack">
+              <div class="result-preview">
+                <div class="result-preview__head">
+                  <div>
+                    <h4>Response headers</h4>
+                    <p>Live header map returned by Webserv.</p>
+                  </div>
+                </div>
+                <div class="history-table history-table--compact" data-response-headers>
+                  <div class="empty-state">Send a request to inspect response headers.</div>
+                </div>
+              </div>
+
+              <div class="result-preview">
+                <div class="result-preview__head">
+                  <div>
+                    <h4>Response body</h4>
+                    <p>Raw body or a binary summary from the live response.</p>
+                  </div>
+                </div>
+                <div class="response-box">
+                  <pre class="response-body" data-response-body>Response body will appear here.</pre>
+                </div>
+              </div>
+
+              <div class="result-preview">
+                <div class="result-preview__head">
+                  <div>
+                    <h4>Rendered preview</h4>
+                    <p>HTML responses render here when the server returns markup.</p>
+                  </div>
+                </div>
+                <div class="preview-frame">
+                  <iframe data-response-preview title="Rendered response preview" srcdoc="<html><body style='font-family:Inter,Arial,sans-serif;padding:24px;background:#0f1117;color:#e6edf7;'>Preview will appear here.</body></html>"></iframe>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="section-title">
+              <div>
+                <h3>Request history</h3>
+                <p>Stored locally in your browser after each live request.</p>
+              </div>
+            </div>
+            <div class="history-table history-table--compact" data-history-table>
+              <div class="empty-state">No history yet.</div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,6 +1,11 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
+#include "Client.hpp"
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <string>
 
 // class dyal response -> kibni HTTP response men request li tvalida
@@ -38,6 +43,9 @@ class Response
         bool        file_exists(const std::string& path, bool& is_dir);
         std::string get_mime_type(const std::string& path);
         std::string build_response(int code, const std::string& content_type, const std::string& body);
+
+        void        handleMultipartUpload();
+        bool        isMultipartRequest() const;
 };
 
 #endif

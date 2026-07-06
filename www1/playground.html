@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Webserv Control Panel · HTTP Playground</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+</head>
+<body data-page="playground">
+  <div class="page-shell">
+    <aside class="sidebar">
+      <a class="sidebar__brand" href="dashboard.html" aria-label="Webserv dashboard home">
+        <img src="assets/logo.svg" alt="" />
+        <div>
+          <strong>Webserv Control Panel</strong>
+          <span>42 testing dashboard</span>.
+        </div>
+      </a>
+
+      <div class="sidebar__section">
+        <div class="sidebar__label">Workspace</div>
+        <nav class="sidebar__nav" aria-label="Primary navigation">
+          <a class="sidebar__link" href="dashboard.html" data-page-link="dashboard">
+            <span>Dashboard</span>
+            <span class="badge">Live</span>
+          </a>
+          <a class="sidebar__link is-active" href="playground.html" data-page-link="playground">
+            <span>HTTP Playground</span>
+            <span class="badge">Send</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar__hint">
+        <p><strong>Tip</strong><br />Use query parameters from the dashboard or type a custom URL here, then inspect the response body, headers and preview below.</p>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <div class="page">
+        <header class="topbar glass">
+          <div class="topbar__title">
+            <p class="eyebrow">HTTP request inspector</p>
+            <h1>HTTP Playground</h1>
+            <p>Build requests manually and inspect the raw response without leaving the browser.</p>
+          </div>
+          <div class="topbar__meta">
+            <span class="chip">Port <strong data-bind="port">-</strong></span>
+            <span class="chip">Host <strong data-bind="host">-</strong></span>
+            <span class="chip">Route <strong data-bind="route">-</strong></span>
+            <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle theme">☾</button>
+            <button class="icon-btn" type="button" data-refresh-page aria-label="Refresh page">↻</button>
+          </div>
+        </header>
+
+        <section class="split reveal reveal-1">
+          <form class="builder panel" data-playground-form>
+            <div class="section-title">
+              <div>
+                <h3>Request builder</h3>
+                <p>Compose GET, POST and DELETE calls with custom headers and a body.</p>
+              </div>
+              <span class="status-chip status-chip--good" data-playground-hint>Ready to send a new request.</span>
+            </div>
+
+            <div class="field-grid">
+              <div class="split-2">
+                <label class="field">
+                  <span class="field__label">Method</span>
+                  <select class="select" name="method">
+                    <option>GET</option>
+                    <option>POST</option>
+                    <option>DELETE</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field__label">URL</span>
+                  <input class="input" name="url" type="text" value="/" placeholder="/ or /cgi-bin/hello.py" />
+                </label>
+              </div>
+
+              <div class="field">
+                <div class="section-title">
+                  <div>
+                    <h3>Custom headers</h3>
+                    <p>Add or remove request headers as needed.</p>
+                  </div>
+                  <button class="btn btn--ghost" type="button" data-add-header>Add header</button>
+                </div>
+                <div class="header-rows" data-header-rows></div>
+              </div>
+
+              <label class="field">
+                <span class="field__label">Body</span>
+                <textarea class="textarea" name="body" placeholder="Request body for POST or custom calls."></textarea>
+              </label>
+
+              <div class="button-row">
+                <button class="btn" type="submit" data-send-request>Send request</button>
+                <button class="btn btn--ghost" type="button" data-clear-body>Clear body</button>
+                <button class="btn btn--ghost" type="button" data-reset-form>Reset form</button>
+              </div>
+            </div>
+          </form>
+
+          <article class="response-grid panel" data-playground-response>
+            <div class="section-title">
+              <div>
+                <h3>Response viewer</h3>
+                <p>Headers, timing and body output from the last request.</p>
+              </div>
+            </div>
+
+            <div class="response-stack">
+              <div class="response-head">
+                <span class="status-chip status-chip--good" data-response-status>Waiting</span>
+                <div class="response-meta">
+                  <span class="chip">Request <strong data-response-label>No request yet</strong></span>
+                  <span class="chip">URL <strong data-response-url>—</strong></span>
+                  <span class="chip">Time <strong data-response-duration>0 ms</strong></span>
+                  <span class="chip">Length <strong data-response-length>0 B</strong></span>
+                  <span class="chip">Type <strong data-response-type>unknown</strong></span>
+                </div>
+              </div>
+
+              <div class="notice" data-response-message>Send a request to inspect a real server response.</div>
+
+              <div class="field">
+                <div class="section-title">
+                  <div>
+                    <h3>Headers</h3>
+                    <p>Returned header fields from the server.</p>
+                  </div>
+                </div>
+                <div class="history-table history-table--compact" data-response-headers>
+                  <div class="empty-state">Send a request to inspect response headers.</div>
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="section-title">
+                  <div>
+                    <h3>Body</h3>
+                    <p>Raw response text or markup.</p>
+                  </div>
+                </div>
+                <div class="response-box">
+                  <pre class="response-body" data-response-body>Response body will appear here.</pre>
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="section-title">
+                  <div>
+                    <h3>Rendered preview</h3>
+                    <p>If the server responds with HTML, it renders here in a sandboxed frame.</p>
+                  </div>
+                </div>
+                <div class="preview-frame">
+                  <iframe data-response-preview title="Rendered response preview" srcdoc="<html><body style='font-family:Inter,Arial,sans-serif;padding:24px;background:#0f1117;color:#e6edf7;'>Preview will appear here.</body></html>"></iframe>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid reveal reveal-2">
+          <div class="section-title">
+            <div>
+              <h3>Recent requests</h3>
+              <p>Everything is stored locally in your browser.</p>
+            </div>
+          </div>
+          <div class="history-table" data-history-table>
+            <div class="empty-state">No history yet.</div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="js/app.js"></script>
+</body>
+</html>

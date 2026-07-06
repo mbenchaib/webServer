@@ -199,9 +199,9 @@ Client* WebServer::bring_client(struct pollfd& fd)
         return &clients[fd.fd];
     for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++)
     {
-        if (it->second.cgi.pipe_in[1] == fd.fd)
+        if (it->second.cgi.file_in == fd.fd)
             return &it->second;
-        if (it->second.cgi.pipe_out[0] == fd.fd)
+        if (it->second.cgi.file_out == fd.fd)
             return &it->second;
     }
     return NULL;
@@ -209,43 +209,25 @@ Client* WebServer::bring_client(struct pollfd& fd)
 
 void    WebServer::HandleClient(struct pollfd& fd)
 {
-    Client& clian = *bring_client(fd);
-    // clian.parsed_request.print();
-    // hna can9ra men client request ou nparsih
+    Client& clian = clients[fd.fd];
+
     if (clian.status == READ && fd.revents & POLLIN)
-    {
-        // std::cout << "server read now\n";
         clian.reading_request();
-    }
-    // hnakanvalidi wach request huwahadak awla
+
     if (clian.status == VALIDATION)
-    {
-        // std::cout << "validating client request\n";
         clian.checker.validate();
-    }
-    // hnaya rashid ybuidy static response dyalo
+
     if (clian.status == STATIC)
-    {
-        // std::cout << "builting STATIC response now\n";
         Response(clian).build();
-    }
-    // hnaya cankhadem cgi ou canbuidy response
+
     if (clian.status == CGI_RUNNING)
-    {
-        // std::cout << "builting CGI response now\n";
         clian.cgi.starting_cgi(pfds, fd);
-    }
-    // hnaya cancoun salit men building response ou cansardo n client
+
     if ((clian.status == WRITE || timeout_check(clian)) && fd.revents & POLLOUT)
-    {
-        // clian.parsed_request.print();
         clian.sending_response();
-    }
-    // hna mli kansali client canmsho
+
     if (clian.status == CLOSE)
     {
-        // std::cout << "server close client\n";
-
         close(fd.fd);
 
         clients.erase(fd.fd);
@@ -261,20 +243,6 @@ void    WebServer::HandleClient(struct pollfd& fd)
         return;
     }
 }
-
-// ===== Initialize server and process socket events using poll() =====
-
-// void    set_pipe(std::map<int, Client>& clients, int fd)
-// {
-//     std::map<int, Client>::iterator it = clients.begin();
-//     for (;it != clients.begin();it++)
-//     {
-//         if (it->second.cgi.pipe_in[1] == fd)
-//             it->second.cgi.pipe_in[1] = -1;
-//         if (it->second.cgi.pipe_out[0] == fd)
-//             it->second.cgi.pipe_out[0] = -1;
-//     }
-// }
 
 void WebServer::run()
 {
@@ -307,24 +275,18 @@ void WebServer::run()
             
             if (pfds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
             {
-                // std::cout << "client with "<<pfds[i].fd << " gone\n";
-                // std::cout << strerror(errno) << '\n';
                 int fd = pfds[i].fd;
-                
                 close(fd);
                 pfds.erase(pfds.begin() + i);
-                bool    isPipe = (clients.find(fd) == clients.end());
-                if (!isPipe)
-                    clients.erase(fd);
-                else if (isListening)
+                if (isListening)
                 {
                     std::vector<int>::iterator it = std::find(server_sd.begin(), server_sd.end(), fd); 
                     server_sd.erase(it);
-
+                    
                     if (server_sd.empty())
-                        throw NoListenSocketException("All listening sockets have failed; server shutting down");
-                }
-                // set_pipe(clients, fd);
+                    throw NoListenSocketException("All listening sockets have failed; server shutting down");
+                }else
+                    clients.erase(fd);
                 i--;
                 continue ;
             }
